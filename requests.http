@@ -1,0 +1,130 @@
+### Register a Teacher
+POST http://localhost:4000/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "timothy.simwawa",
+  "password": "123456",
+  "role": "HOD",
+  "teacherData": {
+    "firstName": "John",
+    "lastName": "Doe",
+    "nrc": "123456/78/9",
+    "tsNo": "TS00123",
+    "address": "Plot 12, Lusaka",
+    "maritalStatus": "Married",
+    "medicalCertificate": "Certified",
+    "academicQualifications": "Grade 12 Certificate",
+    "professionalQualifications": "Primary Diploma",
+    "currentSchoolType": "Primary",
+    "currentSchoolName": "Kyawama",
+    "currentPosition": "Class Teacher",
+    "subjectSpecialization": "Mathematics",
+    "experience": [
+      { "school": "Kyawama Primary", "years": 3 },
+      { "school": "Green Valley Primary", "years": 2 }
+    ],
+    "currentSchoolId": 2
+  }
+}
+
+
+
+### Login User
+POST http://localhost:4000/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "john.doe",
+  "password": "123456"
+}
+
+
+### Create School
+POST http://localhost:4000/api/schools
+Content-Type: application/json
+
+{
+  "name": "Yellow Valley High",
+  "code": "GVH002",
+  "district": "Ndola",
+  "province": "Copperbelt Province"
+}
+
+### Get All Schools
+GET http://localhost:4000/api/schools
+
+### Get Single School
+GET http://localhost:4000/api/schools/2
+
+### Update School
+PUT http://localhost:4000/api/schools/2
+Content-Type: application/json
+
+{
+  "name": "Green Valley High School",
+  "district": "Lusaka Central"
+}
+
+### Delete School
+DELETE http://localhost:4000/api/schools/1
+
+
+### Get teachers
+GET http://localhost:4000/api/teachers
+
+### Get teache by ID
+GET http://localhost:4000/api/teachers/2
+
+### Update teacher by ID
+PUT http://localhost:4000/api/teachers/2
+Content-Type: application/json
+
+{
+    "lastName": "Simwawa"
+}
+
+### Delete user by ID
+DELETE http://localhost:4000/api/teachers/1
+
+
+### Submit Transfer Request
+POST http://localhost:4000/api/transfers
+Content-Type: application/json
+
+{
+  "teacherId": 2,
+  "toSchoolId": 3
+}
+
+### Get All Transfer Requests
+GET http://localhost:4000/api/transfers
+
+### Approve Transfer Request
+PUT http://localhost:4000/api/transfers/approve/1
+
+### Reject Transfer Request
+PUT http://localhost:4000/api/transfers/reject/2
+
+
+### Send notification
+POST http://localhost:4000/api/notifications
+Content-Type: application/json
+
+{
+  "fromId": 3,
+  "toId": 2,
+  "message": "Your transfer request has been approved"
+}
+
+###
+
+### Get notifications for user
+GET http://localhost:4000/api/notifications/2
+Accept: application/json
+
+###
+
+### Mark notification as read
+PUT http://localhost:4000/api/notifications/read/2
+Accept: application/json
