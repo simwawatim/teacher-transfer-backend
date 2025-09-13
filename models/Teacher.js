@@ -5,8 +5,13 @@ const School = require('./School');
 const Teacher = sequelize.define('Teacher', {
   firstName: { type: DataTypes.STRING, allowNull: false },
   lastName: { type: DataTypes.STRING, allowNull: false },
-  nrc: { type: DataTypes.STRING, allowNull: false, unique: true },
-  tsNo: { type: DataTypes.STRING, allowNull: false, unique: true },
+  email: { 
+    type: DataTypes.STRING, 
+    allowNull: false, 
+    validate: { isEmail: true } // removed `unique` here
+  },
+  nrc: { type: DataTypes.STRING, allowNull: false }, // removed `unique`
+  tsNo: { type: DataTypes.STRING, allowNull: false }, // removed `unique`
   address: { type: DataTypes.STRING },
   maritalStatus: { type: DataTypes.ENUM('Single','Married','Divorced','Widowed') },
   medicalCertificate: { type: DataTypes.STRING },
@@ -24,10 +29,15 @@ const Teacher = sequelize.define('Teacher', {
     ) 
   },
   subjectSpecialization: { type: DataTypes.STRING }, 
-  experience: { type: DataTypes.TEXT }, // JSON string: [{"school":"School A","years":3},...]
+  experience: { type: DataTypes.TEXT } 
+}, {
+  indexes: [
+    { unique: true, fields: ['email'], name: 'unique_email' },
+    { unique: true, fields: ['nrc'], name: 'unique_nrc' },
+    { unique: true, fields: ['tsNo'], name: 'unique_tsNo' }
+  ]
 });
 
-// Associate teacher with School
 Teacher.belongsTo(School, { foreignKey: 'currentSchoolId', as: 'currentSchool' });
 
 module.exports = Teacher;

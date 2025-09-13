@@ -1,5 +1,4 @@
 const Notification = require('../models/Notification');
-const User = require('../models/User');
 const Teacher = require('../models/Teacher');
 const nodemailer = require('nodemailer');
 
@@ -14,55 +13,76 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-/** Send email */
-const sendEmail = async (to, subject, text) => {
+/** Send email with HTML template */
+const sendEmail = async (to, subject, message, fromName) => {
+  const htmlTemplate = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #333;">
+      <h2 style="color: #2E86C1;">School System Notification</h2>
+      <p>Hello,</p>
+      <p>You have a new notification from <strong>${fromName}</strong>:</p>
+      <blockquote style="background-color: #f2f2f2; padding: 10px; border-left: 4px solid #2E86C1;">
+        ${message}
+      </blockquote>
+      <p style="margin-top: 20px;">Please log in to your account to respond or view more details.</p>
+      <hr>
+      <p style="font-size: 0.9em; color: #888;">This is an automated message from your School System.</p>
+    </div>
+  `;
+
   try {
     await transporter.sendMail({
       from: `"School System" <${process.env.SMTP_USER}>`,
       to,
       subject,
-      text
+      html: htmlTemplate
     });
   } catch (err) {
     console.error('Email sending failed:', err.message);
   }
 };
 
-/** Create notification and send email */
+/** Create notification */
 exports.createNotification = async (req, res) => {
-  const { fromId, toId, message } = req.body;
+  const { fromTeacherId, toTeacherId, message } = req.body;
+
+  if (!fromTeacherId || !toTeacherId) {
+    return res.status(400).json({ message: 'fromTeacherId and toTeacherId are required' });
+  }
 
   try {
-    const fromUser = await User.findByPk(fromId, { include: ['teacherProfile'] });
-    const toUser = await User.findByPk(toId, { include: ['teacherProfile'] });
-    if (!fromUser || !toUser) return res.status(404).json({ message: 'User not found' });
+    const fromTeacher = await Teacher.findByPk(fromTeacherId, { include: ['user'] });
+    const toTeacher = await Teacher.findByPk(toTeacherId, { include: ['user'] });
 
-    // Create notification
-    const notification = await Notification.create({ fromId, toId, message });
+    if (!fromTeacher) return res.status(404).json({ message: `Sender teacher not found (ID: ${fromTeacherId})` });
+    if (!toTeacher) return res.status(404).json({ message: `Recipient teacher not found (ID: ${toTeacherId})` });
 
-    // Prepare names and email
-    const fromName = fromUser.teacherProfile
-      ? `${fromUser.teacherProfile.firstName} ${fromUser.teacherProfile.lastName}`
-      : fromUser.username;
+    const fromUserId = fromTeacher.user?.id;
+    const toUserId = toTeacher.user?.id;
 
-    const toEmail = toUser.email; // ensure User model has 'email' column
+    if (!fromUserId) return res.status(404).json({ message: `Sender teacher has no associated user` });
+    if (!toUserId) return res.status(404).json({ message: `Recipient teacher has no associated user` });
 
-    // Send email ONLY when creating
-    if (toEmail) {
-      await sendEmail(
-        toEmail,
-        'New Notification',
-        `You have a new message from ${fromName}: "${message}"`
-      );
-    }
+    // Create notification in DB
+    const notification = await Notification.create({
+      fromId: fromUserId,
+      toId: toUserId,
+      message
+    });
+
+    const fromName = `${fromTeacher.firstName} ${fromTeacher.lastName}`;
+
+    // Send HTML email
+    const toEmail = toTeacher.email;
+    if (toEmail) await sendEmail(toEmail, 'New Notification', message, fromName);
 
     res.status(201).json(notification);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
 
-/** Get notifications for a user (no email) */
+/** Get notifications for a user */
 exports.getUserNotifications = async (req, res) => {
   const { userId } = req.params;
   try {
@@ -70,10 +90,9 @@ exports.getUserNotifications = async (req, res) => {
       where: { toId: userId },
       include: [
         {
-          model: User,
-          as: 'from',
-          attributes: ['id', 'username'],
-          include: [{ model: Teacher, as: 'teacherProfile', attributes: ['firstName','lastName'] }]
+          model: Teacher,
+          as: 'fromTeacher',
+          attributes: ['firstName', 'lastName']
         }
       ],
       order: [['createdAt', 'DESC']]
@@ -83,19 +102,18 @@ exports.getUserNotifications = async (req, res) => {
       id: n.id,
       message: n.message,
       read: n.read,
-      from: n.from.teacherProfile
-        ? `${n.from.teacherProfile.firstName} ${n.from.teacherProfile.lastName}`
-        : n.from.username,
+      from: n.fromTeacher ? `${n.fromTeacher.firstName} ${n.fromTeacher.lastName}` : 'Unknown',
       createdAt: n.createdAt
     }));
 
     res.status(200).json(formatted);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
 
-/** Mark notification as read (no email) */
+/** Mark notification as read */
 exports.markAsRead = async (req, res) => {
   const { id } = req.params;
   try {
@@ -106,6 +124,7 @@ exports.markAsRead = async (req, res) => {
     await notification.save();
     res.status(200).json(notification);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };

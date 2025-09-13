@@ -5,12 +5,13 @@ Content-Type: application/json
 {
   "username": "timothy.simwawa",
   "password": "123456",
-  "role": "HOD",
+  "role": "teacher",
   "teacherData": {
     "firstName": "John",
-    "lastName": "Doe",
-    "nrc": "123456/78/9",
-    "tsNo": "TS00123",
+    "lastName": "Mataa",
+    "email": "timeastw@gmail.com",
+    "nrc": "123456/78/2",
+    "tsNo": "TS00125",
     "address": "Plot 12, Lusaka",
     "maritalStatus": "Married",
     "medicalCertificate": "Certified",
@@ -24,7 +25,7 @@ Content-Type: application/json
       { "school": "Kyawama Primary", "years": 3 },
       { "school": "Green Valley Primary", "years": 2 }
     ],
-    "currentSchoolId": 2
+    "currentSchoolId": 1
   }
 }
 
@@ -35,7 +36,7 @@ POST http://localhost:4000/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "john.doe",
+  "username": "john.mataa",
   "password": "123456"
 }
 
@@ -45,25 +46,25 @@ POST http://localhost:4000/api/schools
 Content-Type: application/json
 
 {
-  "name": "Yellow Valley High",
-  "code": "GVH002",
-  "district": "Ndola",
-  "province": "Copperbelt Province"
+  "name": "Chengwe High",
+  "code": "GVH001",
+  "district": "Lusaka",
+  "province": "Lusaka Province"
 }
 
 ### Get All Schools
 GET http://localhost:4000/api/schools
 
 ### Get Single School
-GET http://localhost:4000/api/schools/2
+GET http://localhost:4000/api/schools/1
 
 ### Update School
-PUT http://localhost:4000/api/schools/2
+PUT http://localhost:4000/api/schools/1
 Content-Type: application/json
 
 {
-  "name": "Green Valley High School",
-  "district": "Lusaka Central"
+  "name": "Green High School",
+  "district": "Chongwe Central"
 }
 
 ### Delete School
@@ -74,10 +75,10 @@ DELETE http://localhost:4000/api/schools/1
 GET http://localhost:4000/api/teachers
 
 ### Get teache by ID
-GET http://localhost:4000/api/teachers/2
+GET http://localhost:4000/api/teachers/3
 
 ### Update teacher by ID
-PUT http://localhost:4000/api/teachers/2
+PUT http://localhost:4000/api/teachers/3
 Content-Type: application/json
 
 {
@@ -85,7 +86,7 @@ Content-Type: application/json
 }
 
 ### Delete user by ID
-DELETE http://localhost:4000/api/teachers/1
+DELETE http://localhost:4000/api/teachers/5
 
 
 ### Submit Transfer Request
@@ -93,7 +94,7 @@ POST http://localhost:4000/api/transfers
 Content-Type: application/json
 
 {
-  "teacherId": 2,
+  "teacherId": 4,
   "toSchoolId": 3
 }
 
@@ -112,11 +113,10 @@ POST http://localhost:4000/api/notifications
 Content-Type: application/json
 
 {
-  "fromId": 3,
-  "toId": 2,
+  "fromTeacherId": 1,
+  "toTeacherId": 3,
   "message": "Your transfer request has been approved"
 }
-
 ###
 
 ### Get notifications for user

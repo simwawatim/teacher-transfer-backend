@@ -1,5 +1,6 @@
 const Teacher = require('../models/Teacher');
 const School = require('../models/School');
+const User = require('../models/User'); 
 
 // Get all teachers
 exports.getTeachers = async (req, res) => {
@@ -43,15 +44,22 @@ exports.updateTeacher = async (req, res) => {
 
 exports.deleteTeacher = async (req, res) => {
   try {
-    const teacher = await Teacher.findByPk(req.params.id);
-    if (!teacher) return res.status(404).json({ message: 'Teacher not found' });
+    const teacherId = req.params.id;
 
+    const teacher = await Teacher.findByPk(teacherId);
+    if (!teacher) {
+      return res.status(404).json({ message: 'Teacher not found' });
+    }
+
+    // Delete related User first
     await User.destroy({ where: { teacherProfileId: teacher.id } });
 
+    // Delete Teacher
     await teacher.destroy();
 
-    res.status(200).json({ message: 'Teacher and associated user deleted successfully' });
+    res.json({ message: 'Teacher and related User deleted successfully' });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
