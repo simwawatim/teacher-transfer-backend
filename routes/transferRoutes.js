@@ -3,13 +3,13 @@ const router = express.Router();
 const {
   requestTransfer,
   getTransferRequests,
-  approveTransfer,
-  rejectTransfer
+  getTransferById,
+  updateTransferStatus
 } = require('../controllers/transferController');
 
-router.post('/', requestTransfer);                     // Submit request
-router.get('/', getTransferRequests);                  // Get all requests
-router.put('/approve/:requestId', approveTransfer);    // Approve request
-router.put('/reject/:requestId', rejectTransfer);      // Reject request
+router.post('/', requestTransfer);
+router.get('/', getTransferRequests);
+router.get('/:requestId', getTransferById);
+router.put('/:requestId/status', updateTransferStatus);
 
 module.exports = router;

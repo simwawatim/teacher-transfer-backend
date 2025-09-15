@@ -8,10 +8,10 @@ const Teacher = sequelize.define('Teacher', {
   email: { 
     type: DataTypes.STRING, 
     allowNull: false, 
-    validate: { isEmail: true } // removed `unique` here
+    validate: { isEmail: true } 
   },
-  nrc: { type: DataTypes.STRING, allowNull: false }, // removed `unique`
-  tsNo: { type: DataTypes.STRING, allowNull: false }, // removed `unique`
+  nrc: { type: DataTypes.STRING, allowNull: false }, 
+  tsNo: { type: DataTypes.STRING, allowNull: false }, 
   address: { type: DataTypes.STRING },
   maritalStatus: { type: DataTypes.ENUM('Single','Married','Divorced','Widowed') },
   medicalCertificate: { type: DataTypes.STRING },

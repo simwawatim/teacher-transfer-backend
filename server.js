@@ -1,12 +1,11 @@
 const express = require('express');
 require('dotenv').config();
 const sequelize = require('./config/db'); 
-
+const cors = require('cors');
 
 const User = require('./models/User');
 const Teacher = require('./models/Teacher');
 const School = require('./models/School');
-
 
 const authRoutes = require('./routes/authRoutes');
 const schoolRoutes = require('./routes/schoolRoutes'); 
@@ -15,6 +14,12 @@ const transferRoutes = require('./routes/transferRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
+app.use(cors({
+  origin: 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
+
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
@@ -31,4 +36,4 @@ sequelize.sync({ alter: true })
     console.log('Database synced successfully');
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   })
-  .catch(err => console.error('❌ Database sync error:', err));
+  .catch(err => console.error('Database sync error:', err));

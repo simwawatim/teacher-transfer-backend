@@ -1,7 +1,6 @@
 ### Register a Teacher
 POST http://localhost:4000/api/auth/register
 Content-Type: application/json
-
 {
   "username": "timothy.simwawa",
   "password": "123456",
@@ -34,9 +33,8 @@ Content-Type: application/json
 ### Login User
 POST http://localhost:4000/api/auth/login
 Content-Type: application/json
-
 {
-  "username": "john.mataa",
+  "username": "timothy.simwawa",
   "password": "123456"
 }
 
@@ -44,10 +42,9 @@ Content-Type: application/json
 ### Create School
 POST http://localhost:4000/api/schools
 Content-Type: application/json
-
 {
   "name": "Chengwe High",
-  "code": "GVH001",
+  "code": "GVH003",
   "district": "Lusaka",
   "province": "Lusaka Province"
 }
@@ -80,50 +77,49 @@ GET http://localhost:4000/api/teachers/3
 ### Update teacher by ID
 PUT http://localhost:4000/api/teachers/3
 Content-Type: application/json
-
 {
     "lastName": "Simwawa"
 }
 
 ### Delete user by ID
-DELETE http://localhost:4000/api/teachers/5
+DELETE http://localhost:4000/api/teachers/1
 
 
 ### Submit Transfer Request
 POST http://localhost:4000/api/transfers
 Content-Type: application/json
-
 {
-  "teacherId": 4,
-  "toSchoolId": 3
+  "teacherId": 3,
+  "toSchoolId": 1
 }
 
 ### Get All Transfer Requests
 GET http://localhost:4000/api/transfers
 
+### Get Transfer Id ID
+GET http://localhost:4000/api/transfers/3
+
 ### Approve Transfer Request
 PUT http://localhost:4000/api/transfers/approve/1
 
+
 ### Reject Transfer Request
-PUT http://localhost:4000/api/transfers/reject/2
+PUT http://localhost:4000/api/transfers/reject/1
 
 
 ### Send notification
 POST http://localhost:4000/api/notifications
 Content-Type: application/json
-
 {
   "fromTeacherId": 1,
   "toTeacherId": 3,
   "message": "Your transfer request has been approved"
 }
-###
+
 
 ### Get notifications for user
-GET http://localhost:4000/api/notifications/2
+GET http://localhost:4000/api/notifications/3
 Accept: application/json
-
-###
 
 ### Mark notification as read
 PUT http://localhost:4000/api/notifications/read/2

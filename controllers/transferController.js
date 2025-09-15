@@ -55,39 +55,55 @@ exports.getTransferRequests = async (req, res) => {
   }
 };
 
-// Approve a transfer request
-exports.approveTransfer = async (req, res) => {
+exports.updateTransferStatus = async (req, res) => {
   const { requestId } = req.params;
+  const { status, reason } = req.body;
+  if (!['approved', 'rejected'].includes(status?.toLowerCase())) {
+    return res.status(400).json({ message: 'Invalid status. Must be approved or rejected.' });
+  }
 
   try {
     const transfer = await TransferRequest.findByPk(requestId);
-    if (!transfer) return res.status(404).json({ message: 'Transfer request not found' });
+    if (!transfer) return res.status(404).json({ message: "Transfer request not found" });
 
-    const teacher = await Teacher.findByPk(transfer.teacherId);
-    teacher.schoolId = transfer.toSchoolId;
-    await teacher.save();
+    if (status.toLowerCase() === 'approved') {
+      const teacher = await Teacher.findByPk(transfer.teacherId);
+      if (!teacher) return res.status(404).json({ message: "Teacher not found" });
+      teacher.schoolId = transfer.toSchoolId;
+      await teacher.save();
+    }
 
-    transfer.status = 'approved';
+    transfer.status = status.toLowerCase();
+    transfer.statusReason = reason || "";
     await transfer.save();
 
-    res.status(200).json({ message: 'Transfer approved', transfer });
+    res.status(200).json({ message: `Transfer ${status.toLowerCase()} successfully`, transfer });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// Reject a transfer request
-exports.rejectTransfer = async (req, res) => {
+
+
+exports.getTransferById = async (req, res) => {
   const { requestId } = req.params;
 
   try {
-    const transfer = await TransferRequest.findByPk(requestId);
+    const transfer = await TransferRequest.findByPk(requestId, {
+      include: [
+        {
+          model: Teacher,
+          as: 'teacher',
+          include: [{ model: School, as: 'currentSchool' }]
+        },
+        { model: School, as: 'fromSchool' },
+        { model: School, as: 'toSchool' }
+      ]
+    });
+
     if (!transfer) return res.status(404).json({ message: 'Transfer request not found' });
 
-    transfer.status = 'rejected';
-    await transfer.save();
-
-    res.status(200).json({ message: 'Transfer rejected', transfer });
+    res.status(200).json(transfer);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
