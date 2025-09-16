@@ -2,7 +2,6 @@ const TransferRequest = require('../models/TransferRequest');
 const Teacher = require('../models/Teacher');
 const School = require('../models/School');
 
-// Submit a transfer request
 exports.requestTransfer = async (req, res) => {
   const { teacherId, toSchoolId } = req.body;
 
@@ -13,7 +12,6 @@ exports.requestTransfer = async (req, res) => {
     const toSchool = await School.findByPk(toSchoolId);
     if (!toSchool) return res.status(404).json({ message: 'Target school not found' });
 
-    // Prevent duplicate pending requests
     const existing = await TransferRequest.findOne({
       where: { teacherId, status: 'pending' }
     });

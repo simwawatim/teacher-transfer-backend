@@ -4,52 +4,85 @@ const sequelize = require('../config/db');
 const User = require('../models/User');
 const Teacher = require('../models/Teacher');
 const School = require('../models/School');
-
+const crypto = require("crypto");
 sequelize.sync();
 
-const isValidEmail = (email) => {
-  const re = /\S+@\S+\.\S+/;
-  return re.test(email);
-};
+
+
+function generateRandomPassword() {
+  return Math.random().toString(36).slice(-4);
+}
+
+function generateUsername(firstName, lastName) {
+  const randomNum = Math.floor(10 + Math.random() * 90); // 2-digit random
+  const f = firstName ? firstName.substring(0, 2).toLowerCase() : "xx";
+  const l = lastName ? lastName.substring(0, 2).toLowerCase() : "yy";
+  return `${f}${l}${randomNum}`;
+}
+
+function isValidEmail(email) {
+  return /\S+@\S+\.\S+/.test(email);
+}
 
 exports.register = async (req, res) => {
-  const { username, password, role, teacherData } = req.body;
+  const { role, teacherData } = req.body;
 
   try {
-    // Basic validations
-    if (!username || username.trim() === '') return res.status(400).json({ message: 'Username is required' });
-    if (!password || password.length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters' });
-    const validRoles = ['teacher','headteacher','admin'];
-    if (!role || !validRoles.includes(role)) return res.status(400).json({ message: `Role must be one of: ${validRoles.join(', ')}` });
-
-    // Check username
-    const existingUser = await User.findOne({ where: { username } });
-    if (existingUser) return res.status(400).json({ message: 'Username already exists' });
+    const validRoles = ["teacher", "headteacher", "admin"];
+    if (!role || !validRoles.includes(role)) {
+      return res.status(400).json({
+        message: `Role must be one of: ${validRoles.join(", ")}`
+      });
+    }
 
     let teacherProfile = null;
+    let username, password;
 
-    if (role === 'teacher' || role === 'headteacher') {
-      if (!teacherData) return res.status(400).json({ message: 'Teacher data is required' });
+    if (role === "teacher" || role === "headteacher") {
+      if (!teacherData)
+        return res.status(400).json({ message: "Teacher data is required" });
 
-      const requiredFields = ['firstName','lastName','email','currentSchoolId','currentPosition'];
+      const requiredFields = [
+        "firstName",
+        "lastName",
+        "email",
+        "currentSchoolId",
+        "currentPosition"
+      ];
       for (const field of requiredFields) {
-        if (!teacherData[field]) return res.status(400).json({ message: `${field} is required for teacher profile` });
+        if (!teacherData[field])
+          return res
+            .status(400)
+            .json({ message: `${field} is required for teacher profile` });
       }
 
-      if (!isValidEmail(teacherData.email)) return res.status(400).json({ message: 'Invalid email format' });
+      if (!isValidEmail(teacherData.email))
+        return res.status(400).json({ message: "Invalid email format" });
 
       const school = await School.findByPk(teacherData.currentSchoolId);
-      if (!school) return res.status(400).json({ message: 'Current school does not exist' });
+      if (!school)
+        return res.status(400).json({ message: "Current school does not exist" });
 
       teacherProfile = await Teacher.create({
         ...teacherData,
         experience: JSON.stringify(teacherData.experience || [])
       });
 
-      if (!teacherProfile || !teacherProfile.id) return res.status(500).json({ message: 'Failed to create teacher profile' });
+      if (!teacherProfile || !teacherProfile.id)
+        return res
+          .status(500)
+          .json({ message: "Failed to create teacher profile" });
+      username = generateUsername(teacherData.firstName, teacherData.lastName);
+      password = generateRandomPassword();
+    } else {
+      username = "admin" + Math.floor(10 + Math.random() * 90);
+      password = generateRandomPassword();
+    }
+    const existingUser = await User.findOne({ where: { username } });
+    if (existingUser) {
+      username = username + Math.floor(Math.random() * 100);
     }
 
-    // Create User
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await User.create({
       username,
@@ -58,18 +91,28 @@ exports.register = async (req, res) => {
       teacherProfileId: teacherProfile ? teacherProfile.id : null
     });
 
-    res.status(201).json({
-      message: teacherProfile ? 'User and teacher profile registered successfully' : 'User registered successfully',
+    console.log("✅ New user registered:", {
       userId: newUser.id,
+      username,
+      password,
+      role,
       teacherProfileId: teacherProfile ? teacherProfile.id : null
     });
 
+    res.status(201).json({
+      message: teacherProfile
+        ? "User and teacher profile registered successfully"
+        : "User registered successfully",
+      userId: newUser.id,
+      username,
+      password, 
+      teacherProfileId: teacherProfile ? teacherProfile.id : null
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
-
 
 
 exports.login = async (req, res) => {

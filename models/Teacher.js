@@ -5,6 +5,7 @@ const School = require('./School');
 const Teacher = sequelize.define('Teacher', {
   firstName: { type: DataTypes.STRING, allowNull: false },
   lastName: { type: DataTypes.STRING, allowNull: false },
+  profilePicture: { type: DataTypes.STRING, allowNull: true},
   email: { 
     type: DataTypes.STRING, 
     allowNull: false, 

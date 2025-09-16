@@ -82,7 +82,7 @@ Content-Type: application/json
 }
 
 ### Delete user by ID
-DELETE http://localhost:4000/api/teachers/1
+DELETE http://localhost:4000/api/teachers/4
 
 
 ### Submit Transfer Request

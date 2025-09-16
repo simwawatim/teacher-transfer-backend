@@ -1,6 +1,8 @@
 const Teacher = require('../models/Teacher');
 const School = require('../models/School');
 const User = require('../models/User'); 
+const path = require('path');
+const fs = require('fs');
 
 // Get all teachers
 exports.getTeachers = async (req, res) => {
@@ -23,18 +25,35 @@ exports.getTeacherById = async (req, res) => {
   }
 };
 
-// Update teacher
+
 exports.updateTeacher = async (req, res) => {
   try {
-    const [updatedRows, [updatedTeacher]] = await Teacher.update(req.body, {
-      where: { id: req.params.id },
-      returning: true,
+    const teacher = await Teacher.findByPk(req.params.id);
+    if (!teacher) return res.status(404).json({ message: 'Teacher not found' });
+
+    const allowedFields = ['email', 'address', 'maritalStatus'];
+    const updates = {};
+
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) updates[key] = req.body[key];
+    }
+
+    if (req.file) {
+      updates.profilePicture = `/uploads/teachers/${req.file.filename}`;
+
+      if (teacher.profilePicture) {
+        const oldPath = path.join(__dirname, '..', teacher.profilePicture);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+    }
+
+    await teacher.update(updates);
+
+    const updatedTeacher = await Teacher.findByPk(req.params.id, {
+      include: { model: School, as: 'currentSchool' },
     });
 
-    if (updatedRows === 0) return res.status(404).json({ message: 'Teacher not found' });
-    // Reload with association
-    const teacherWithSchool = await Teacher.findByPk(updatedTeacher.id, { include: { model: School, as: 'currentSchool' } });
-    res.status(200).json(teacherWithSchool);
+    res.status(200).json(updatedTeacher);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
