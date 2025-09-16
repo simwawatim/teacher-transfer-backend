@@ -22,3 +22,4 @@ Thumbs.db
 # Optional: local database files
 *.sqlite
 *.db
+./uploads
