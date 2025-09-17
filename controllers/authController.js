@@ -25,59 +25,72 @@ function isValidEmail(email) {
 }
 
 exports.register = async (req, res) => {
-  const { role, teacherData } = req.body;
+  let { role, teacherData } = req.body;
+
+  // Parse teacherData if sent as JSON string (from FormData)
+  if (typeof teacherData === "string") {
+    try {
+      teacherData = JSON.parse(teacherData);
+    } catch (err) {
+      return res.status(400).json({ message: "Invalid teacherData JSON" });
+    }
+  }
 
   try {
     const validRoles = ["teacher", "headteacher", "admin"];
     if (!role || !validRoles.includes(role)) {
-      return res.status(400).json({
-        message: `Role must be one of: ${validRoles.join(", ")}`
-      });
+      return res.status(400).json({ message: `Role must be one of: ${validRoles.join(", ")}` });
     }
 
     let teacherProfile = null;
     let username, password;
 
     if (role === "teacher" || role === "headteacher") {
-      if (!teacherData)
-        return res.status(400).json({ message: "Teacher data is required" });
+      if (!teacherData) return res.status(400).json({ message: "Teacher data is required" });
 
-      const requiredFields = [
-        "firstName",
-        "lastName",
-        "email",
-        "currentSchoolId",
-        "currentPosition"
-      ];
+      const requiredFields = ["firstName", "lastName", "email", "currentSchoolId", "currentPosition"];
       for (const field of requiredFields) {
-        if (!teacherData[field])
-          return res
-            .status(400)
-            .json({ message: `${field} is required for teacher profile` });
+        if (!teacherData[field]) return res.status(400).json({ message: `${field} is required for teacher profile` });
       }
 
-      if (!isValidEmail(teacherData.email))
-        return res.status(400).json({ message: "Invalid email format" });
+      if (!isValidEmail(teacherData.email)) return res.status(400).json({ message: "Invalid email format" });
 
       const school = await School.findByPk(teacherData.currentSchoolId);
-      if (!school)
-        return res.status(400).json({ message: "Current school does not exist" });
+      if (!school) return res.status(400).json({ message: "Current school does not exist" });
 
+      // Save uploaded PDF paths as relative URLs
+      const files = req.files;
+      const medicalCertificatePath = files?.medicalCertificate?.[0]?.filename
+        ? `/uploads/teachers/docs/${files.medicalCertificate[0].filename}`
+        : null;
+      const academicQualificationsPath = files?.academicQualifications?.[0]?.filename
+        ? `/uploads/teachers/docs/${files.academicQualifications[0].filename}`
+        : null;
+      const professionalQualificationsPath = files?.professionalQualifications?.[0]?.filename
+        ? `/uploads/teachers/docs/${files.professionalQualifications[0].filename}`
+        : null;
+
+      if (!medicalCertificatePath || !academicQualificationsPath || !professionalQualificationsPath) {
+        return res.status(400).json({ message: "All 3 PDF documents are required!" });
+      }
+
+      // Create teacher profile
       teacherProfile = await Teacher.create({
         ...teacherData,
+        medicalCertificate: medicalCertificatePath,
+        academicQualifications: academicQualificationsPath,
+        professionalQualifications: professionalQualificationsPath,
         experience: JSON.stringify(teacherData.experience || [])
       });
 
-      if (!teacherProfile || !teacherProfile.id)
-        return res
-          .status(500)
-          .json({ message: "Failed to create teacher profile" });
       username = generateUsername(teacherData.firstName, teacherData.lastName);
       password = generateRandomPassword();
     } else {
       username = "admin" + Math.floor(10 + Math.random() * 90);
       password = generateRandomPassword();
     }
+
+    // Ensure unique username
     const existingUser = await User.findOne({ where: { username } });
     if (existingUser) {
       username = username + Math.floor(Math.random() * 100);
@@ -91,30 +104,19 @@ exports.register = async (req, res) => {
       teacherProfileId: teacherProfile ? teacherProfile.id : null
     });
 
-    console.log("✅ New user registered:", {
+    res.status(201).json({
+      message: teacherProfile ? "User and teacher profile registered successfully" : "User registered successfully",
       userId: newUser.id,
       username,
       password,
-      role,
       teacherProfileId: teacherProfile ? teacherProfile.id : null
     });
 
-    res.status(201).json({
-      message: teacherProfile
-        ? "User and teacher profile registered successfully"
-        : "User registered successfully",
-      userId: newUser.id,
-      username,
-      password, 
-      teacherProfileId: teacherProfile ? teacherProfile.id : null
-    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
-
-
 exports.login = async (req, res) => {
   const { username, password } = req.body;
 

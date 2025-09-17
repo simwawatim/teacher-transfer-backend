@@ -72,7 +72,7 @@ DELETE http://localhost:4000/api/schools/1
 GET http://localhost:4000/api/teachers
 
 ### Get teache by ID
-GET http://localhost:4000/api/teachers/3
+GET http://localhost:4000/api/teachers/8
 
 ### Update teacher by ID
 PUT http://localhost:4000/api/teachers/3
