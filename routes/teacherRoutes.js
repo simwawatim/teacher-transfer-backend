@@ -6,12 +6,14 @@ const {
   updateTeacher,
   deleteTeacher
 } = require('../controllers/teacherController');
-const upload = require('../middleware/upload'); 
+const upload = require('../middleware/upload');
+const authenticateUser = require("../middleware/authenticateUser");
 
 
-router.get('/', getTeachers);
-router.get('/:id', getTeacherById);
-router.put('/:id', upload.single('profilePicture'), updateTeacher);
-router.delete('/:id', deleteTeacher);
+
+router.get('/', authenticateUser , getTeachers);
+router.get('/:id', authenticateUser , getTeacherById);
+router.put('/:id', authenticateUser ,upload.single('profilePicture'), updateTeacher);
+router.delete('/:id', authenticateUser,deleteTeacher);
 
 module.exports = router;
