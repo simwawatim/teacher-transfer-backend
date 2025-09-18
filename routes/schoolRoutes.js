@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const authorizeRole = require("../middleware/authorizeRole");
 const {
   createSchool,
   getSchools,
@@ -9,10 +10,11 @@ const {
 } = require('../controllers/schoolController');
 const authenticateUser = require("../middleware/authenticateUser");
 
-router.post('/', authenticateUser, createSchool);
+router.post('/', authenticateUser, authorizeRole('admin'), createSchool);
 router.get('/', authenticateUser , getSchools);
-router.get('/:id', authenticateUser, getSchoolById);
-router.put('/:id', authenticateUser, updateSchool);
-router.delete('/:id', authenticateUser , deleteSchool);
+router.get('/:id', authenticateUser, authorizeRole('admin'), getSchoolById);
+router.put('/:id', authenticateUser, authorizeRole('admin'), updateSchool);
+router.delete('/:id', authenticateUser , authorizeRole('admin'), deleteSchool);
 
 module.exports = router;
+createSchool

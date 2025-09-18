@@ -32,21 +32,31 @@ exports.requestTransfer = async (req, res) => {
   }
 };
 
-// Get all transfer requests
+
 exports.getTransferRequests = async (req, res) => {
   try {
+    const user = req.user;
+
+    let whereClause = {};
+  
+    if (user.role !== 'admin') {
+      whereClause.teacherId = user.id; 
+    }
+
     const requests = await TransferRequest.findAll({
+      where: whereClause,
       include: [
         { 
           model: Teacher, 
           as: 'teacher',
-          include: [{ model: School, as: 'currentSchool' }] // Correct alias
+          include: [{ model: School, as: 'currentSchool' }]
         },
         { model: School, as: 'fromSchool' },
         { model: School, as: 'toSchool' }
       ],
       order: [['id', 'DESC']]
     });
+
     res.status(200).json(requests);
   } catch (err) {
     res.status(500).json({ message: err.message });

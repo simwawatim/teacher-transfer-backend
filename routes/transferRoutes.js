@@ -6,10 +6,11 @@ const {
   getTransferById,
   updateTransferStatus
 } = require('../controllers/transferController');
+const authenticateUser = require("../middleware/authenticateUser");
 
-router.post('/', requestTransfer);
-router.get('/', getTransferRequests);
-router.get('/:requestId', getTransferById);
-router.put('/:requestId/status', updateTransferStatus);
+router.post('/',authenticateUser, requestTransfer);
+router.get('/', authenticateUser, getTransferRequests);
+router.get('/:requestId', authenticateUser, getTransferById);
+router.put('/:requestId/status', authenticateUser, updateTransferStatus);
 
 module.exports = router;
