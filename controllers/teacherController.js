@@ -25,7 +25,7 @@ exports.getTeacherById = async (req, res) => {
   }
 };
 
-
+// Update teacher
 exports.updateTeacher = async (req, res) => {
   try {
     const teacher = await Teacher.findByPk(req.params.id);
@@ -38,9 +38,11 @@ exports.updateTeacher = async (req, res) => {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
 
+    // Handle profile picture
     if (req.file) {
-      updates.profilePicture = `/uploads/teachers/${req.file.filename}`;
+      updates.profilePicture = `uploads/teachers/${req.file.filename}`;
 
+      // Delete old profile picture
       if (teacher.profilePicture) {
         const oldPath = path.join(__dirname, '..', teacher.profilePicture);
         if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
@@ -60,18 +62,19 @@ exports.updateTeacher = async (req, res) => {
 };
 
 // Delete teacher
-
 exports.deleteTeacher = async (req, res) => {
   try {
-    const teacherId = req.params.id;
-
-    const teacher = await Teacher.findByPk(teacherId);
-    if (!teacher) {
-      return res.status(404).json({ message: 'Teacher not found' });
-    }
+    const teacher = await Teacher.findByPk(req.params.id);
+    if (!teacher) return res.status(404).json({ message: 'Teacher not found' });
 
     // Delete related User first
     await User.destroy({ where: { teacherProfileId: teacher.id } });
+
+    // Delete profile picture file
+    if (teacher.profilePicture) {
+      const filePath = path.join(__dirname, '..', teacher.profilePicture);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
 
     // Delete Teacher
     await teacher.destroy();
@@ -80,5 +83,27 @@ exports.deleteTeacher = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getProfilePicture = async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+
+    const teacher = await Teacher.findByPk(teacherId, {
+      attributes: ['profilePicture']
+    });
+
+    if (!teacher || !teacher.profilePicture) {
+      return res.status(404).json({ message: 'Profile picture not found' });
+    }
+cl
+    const profilePath = teacher.profilePicture.replace(/^\/+/, '');
+    const fullUrl = `http://localhost:4000/${profilePath}`;
+
+    res.status(200).json({ profilePicture: fullUrl });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
 };

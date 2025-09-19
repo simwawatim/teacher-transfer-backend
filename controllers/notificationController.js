@@ -1,5 +1,6 @@
 const Notification = require('../models/Notification');
 const Teacher = require('../models/Teacher');
+const User = require('../models/User');
 const nodemailer = require('nodemailer');
 
 /** Nodemailer transporter */
@@ -90,9 +91,16 @@ exports.getUserNotifications = async (req, res) => {
       where: { toId: userId },
       include: [
         {
-          model: Teacher,
-          as: 'fromTeacher',
-          attributes: ['firstName', 'lastName']
+          model: User,
+          as: 'from', // matches your Notification association
+          attributes: ['id', 'email'],
+          include: [
+            {
+              model: Teacher,
+              as: 'teacher', // make sure User has Teacher association
+              attributes: ['firstName', 'lastName']
+            }
+          ]
         }
       ],
       order: [['createdAt', 'DESC']]
@@ -102,7 +110,9 @@ exports.getUserNotifications = async (req, res) => {
       id: n.id,
       message: n.message,
       read: n.read,
-      from: n.fromTeacher ? `${n.fromTeacher.firstName} ${n.fromTeacher.lastName}` : 'Unknown',
+      from: n.from?.teacher
+        ? `${n.from.teacher.firstName} ${n.from.teacher.lastName}`
+        : 'Unknown',
       createdAt: n.createdAt
     }));
 
