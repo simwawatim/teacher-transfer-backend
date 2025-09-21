@@ -10,11 +10,18 @@ const TransferRequest = sequelize.define('TransferRequest', {
     autoIncrement: true,
   },
   status: {
-    type: DataTypes.ENUM('pending', 'approved', 'rejected'),
+    type: DataTypes.ENUM(
+      'pending', 
+      'headteacher_approved', 
+      'headteacher_rejected', 
+      'approved', 
+      'rejected'
+    ),
     defaultValue: 'pending',
   }
 });
 
+// Associations
 TransferRequest.belongsTo(Teacher, { as: 'teacher', foreignKey: 'teacherId' });
 TransferRequest.belongsTo(School, { as: 'fromSchool', foreignKey: 'fromSchoolId' });
 TransferRequest.belongsTo(School, { as: 'toSchool', foreignKey: 'toSchoolId' });

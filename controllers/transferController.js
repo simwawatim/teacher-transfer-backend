@@ -66,13 +66,24 @@ exports.getTransferRequests = async (req, res) => {
 exports.updateTransferStatus = async (req, res) => {
   const { requestId } = req.params;
   const { status, reason } = req.body;
-  if (!['approved', 'rejected'].includes(status?.toLowerCase())) {
-    return res.status(400).json({ message: 'Invalid status. Must be approved or rejected.' });
+
+
+  const allowedStatuses = [
+    'pending',
+    'headteacher_approved',
+    'headteacher_rejected',
+    'approved',
+    'rejected'
+  ];
+
+  if (!status || !allowedStatuses.includes(status.toLowerCase())) {
+    return res.status(400).json({ message: `Invalid status. Must be one of: ${allowedStatuses.join(", ")}` });
   }
 
   try {
     const transfer = await TransferRequest.findByPk(requestId);
     if (!transfer) return res.status(404).json({ message: "Transfer request not found" });
+
 
     if (status.toLowerCase() === 'approved') {
       const teacher = await Teacher.findByPk(transfer.teacherId);
@@ -80,16 +91,17 @@ exports.updateTransferStatus = async (req, res) => {
       teacher.schoolId = transfer.toSchoolId;
       await teacher.save();
     }
-
     transfer.status = status.toLowerCase();
     transfer.statusReason = reason || "";
     await transfer.save();
 
     res.status(200).json({ message: `Transfer ${status.toLowerCase()} successfully`, transfer });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error(err);
+    res.status(500).json({ message: err.message || "Internal server error" });
   }
 };
+
 
 
 
