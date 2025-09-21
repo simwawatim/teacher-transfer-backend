@@ -119,15 +119,15 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "fromTeacherId": 1,
-  "toTeacherId": 3,
-  "message": "Your transfer request has been approved"
+  "fromTeacherId": 2,
+  "toTeacherId": 1,
+  "message": "Your you have a new transfer request."
 }
 
 
 
 ### Get notifications for user
-GET http://localhost:4000/api/notifications/4
+GET http://localhost:4000/api/notifications/1
 Accept: application/json
 
 ### Mark notification as read
