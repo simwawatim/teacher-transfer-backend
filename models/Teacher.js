@@ -5,36 +5,21 @@ const School = require('./School');
 const Teacher = sequelize.define('Teacher', {
   firstName: { type: DataTypes.STRING, allowNull: false },
   lastName: { type: DataTypes.STRING, allowNull: false },
-  profilePicture: { type: DataTypes.STRING, allowNull: true },
-  email: { 
-    type: DataTypes.STRING, 
-    allowNull: false, 
-    validate: { isEmail: true } 
-  },
-  nrc: { type: DataTypes.STRING, allowNull: false }, 
-  tsNo: { type: DataTypes.STRING, allowNull: false }, 
+  profilePicture: { type: DataTypes.STRING },
+  email: { type: DataTypes.STRING, allowNull: false, unique: true, validate: { isEmail: true } },
+  nrc: { type: DataTypes.STRING, allowNull: false, unique: true },
+  tsNo: { type: DataTypes.STRING, allowNull: false, unique: true },
   address: { type: DataTypes.STRING },
   maritalStatus: { type: DataTypes.ENUM('Single','Married','Divorced','Widowed') },
 
-  // File uploads stored as TEXT
   medicalCertificate: { type: DataTypes.TEXT, allowNull: false },
   academicQualifications: { type: DataTypes.TEXT, allowNull: false }, 
   professionalQualifications: { type: DataTypes.TEXT, allowNull: false },
 
-
   currentSchoolType: { type: DataTypes.ENUM('Community','Primary','Secondary') },
-  currentSchoolName: { type: DataTypes.STRING }, 
-  currentPosition: { 
-    type: DataTypes.ENUM('Class Teacher','Subject Teacher','Senior Teacher','HOD','Deputy Head','Head Teacher') 
-  },
-  subjectSpecialization: { type: DataTypes.STRING }, 
-  experience: { type: DataTypes.TEXT } 
-}, {
-  indexes: [
-    { unique: true, fields: ['email'], name: 'unique_email' },
-    { unique: true, fields: ['nrc'], name: 'unique_nrc' },
-    { unique: true, fields: ['tsNo'], name: 'unique_tsNo' }
-  ]
+  currentPosition: { type: DataTypes.ENUM('Class Teacher','Subject Teacher','Senior Teacher','HOD','Deputy Head','Head Teacher') },
+  subjectSpecialization: { type: DataTypes.STRING },
+  experience: { type: DataTypes.TEXT }
 });
 
 // Relation with School

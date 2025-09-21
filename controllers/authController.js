@@ -25,19 +25,10 @@ function isValidEmail(email) {
 }
 
 exports.register = async (req, res) => {
-  let { role, teacherData } = req.body;
-
-  // Parse teacherData if sent as JSON string (from FormData)
-  if (typeof teacherData === "string") {
-    try {
-      teacherData = JSON.parse(teacherData);
-    } catch (err) {
-      return res.status(400).json({ message: "Invalid teacherData JSON" });
-    }
-  }
-
   try {
+    const { role, teacherData } = req.body;
     const validRoles = ["teacher", "headteacher", "admin"];
+
     if (!role || !validRoles.includes(role)) {
       return res.status(400).json({ message: `Role must be one of: ${validRoles.join(", ")}` });
     }
@@ -48,38 +39,35 @@ exports.register = async (req, res) => {
     if (role === "teacher" || role === "headteacher") {
       if (!teacherData) return res.status(400).json({ message: "Teacher data is required" });
 
-      const requiredFields = ["firstName", "lastName", "email", "currentSchoolId", "currentPosition"];
+      const requiredFields = [
+        "firstName",
+        "lastName",
+        "email",
+        "currentSchoolId",
+        "currentPosition",
+        "medicalCertificate",
+        "academicQualifications",
+        "professionalQualifications"
+      ];
+
       for (const field of requiredFields) {
-        if (!teacherData[field]) return res.status(400).json({ message: `${field} is required for teacher profile` });
+        if (!teacherData[field]) {
+          return res.status(400).json({ message: `${field} is required for teacher profile` });
+        }
       }
 
-      if (!isValidEmail(teacherData.email)) return res.status(400).json({ message: "Invalid email format" });
+      if (!isValidEmail(teacherData.email)) {
+        return res.status(400).json({ message: "Invalid email format" });
+      }
 
       const school = await School.findByPk(teacherData.currentSchoolId);
-      if (!school) return res.status(400).json({ message: "Current school does not exist" });
-
-      // Save uploaded PDF paths as relative URLs
-      const files = req.files;
-      const medicalCertificatePath = files?.medicalCertificate?.[0]?.filename
-        ? `/uploads/teachers/docs/${files.medicalCertificate[0].filename}`
-        : null;
-      const academicQualificationsPath = files?.academicQualifications?.[0]?.filename
-        ? `/uploads/teachers/docs/${files.academicQualifications[0].filename}`
-        : null;
-      const professionalQualificationsPath = files?.professionalQualifications?.[0]?.filename
-        ? `/uploads/teachers/docs/${files.professionalQualifications[0].filename}`
-        : null;
-
-      if (!medicalCertificatePath || !academicQualificationsPath || !professionalQualificationsPath) {
-        return res.status(400).json({ message: "All 3 PDF documents are required!" });
+      if (!school) {
+        return res.status(400).json({ message: "Current school does not exist" });
       }
 
-      // Create teacher profile
+      // Save teacher profile
       teacherProfile = await Teacher.create({
         ...teacherData,
-        medicalCertificate: medicalCertificatePath,
-        academicQualifications: academicQualificationsPath,
-        professionalQualifications: professionalQualificationsPath,
         experience: JSON.stringify(teacherData.experience || [])
       });
 
@@ -114,9 +102,12 @@ exports.register = async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: err.message || "An unknown error occurred" });
   }
 };
+
+
+
 exports.login = async (req, res) => {
   const { username, password } = req.body;
 

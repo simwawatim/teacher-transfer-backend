@@ -1,30 +1,22 @@
 ### Register a Teacher
 POST http://localhost:4000/api/auth/register
 Content-Type: application/json
+Accept: application/json
+
 {
-  "username": "timothy.simwawa",
-  "password": "123456",
   "role": "teacher",
   "teacherData": {
     "firstName": "John",
-    "lastName": "Mataa",
-    "email": "timeastw@gmail.com",
-    "nrc": "123456/78/2",
-    "tsNo": "TS00125",
-    "address": "Plot 12, Lusaka",
-    "maritalStatus": "Married",
-    "medicalCertificate": "Certified",
-    "academicQualifications": "Grade 12 Certificate",
-    "professionalQualifications": "Primary Diploma",
-    "currentSchoolType": "Primary",
-    "currentSchoolName": "Kyawama",
-    "currentPosition": "Class Teacher",
-    "subjectSpecialization": "Mathematics",
-    "experience": [
-      { "school": "Kyawama Primary", "years": 3 },
-      { "school": "Green Valley Primary", "years": 2 }
-    ],
-    "currentSchoolId": 1
+    "lastName": "Doe",
+    "email": "1johndoe@example.com",
+    "currentSchoolId": 1,
+    "currentPosition": "Math Teacher",
+    "nrc": "523456/78/2",
+    "tsNo": "TS-2025-002",
+    "experience": [{"year":2023,"position":"Assistant Teacher"}],
+    "medicalCertificate": "/uploads/teachers/docs/medical.pdf",
+    "academicQualifications": "/uploads/teachers/docs/academic.pdf",
+    "professionalQualifications": "/uploads/teachers/docs/professional.pdf"
   }
 }
 
@@ -33,15 +25,20 @@ Content-Type: application/json
 ### Login User
 POST http://localhost:4000/api/auth/login
 Content-Type: application/json
+Accept: application/json
+
 {
   "username": "timothy.simwawa",
   "password": "123456"
 }
 
 
+
 ### Create School
 POST http://localhost:4000/api/schools
 Content-Type: application/json
+Accept: application/json
+
 {
   "name": "Chengwe High",
   "code": "GVH003",
@@ -49,8 +46,11 @@ Content-Type: application/json
   "province": "Lusaka Province"
 }
 
+
 ### Get All Schools
 GET http://localhost:4000/api/schools
+Accept: application/json
+
 
 ### Get Single School
 GET http://localhost:4000/api/schools/1
@@ -77,9 +77,12 @@ GET http://localhost:4000/api/teachers/8
 ### Update teacher by ID
 PUT http://localhost:4000/api/teachers/3
 Content-Type: application/json
+Accept: application/json
+
 {
-    "lastName": "Simwawa"
+  "lastName": "Simwawa"
 }
+
 
 ### Delete user by ID
 DELETE http://localhost:4000/api/teachers/4
@@ -88,10 +91,13 @@ DELETE http://localhost:4000/api/teachers/4
 ### Submit Transfer Request
 POST http://localhost:4000/api/transfers
 Content-Type: application/json
+Accept: application/json
+
 {
   "teacherId": 3,
   "toSchoolId": 1
 }
+
 
 ### Get All Transfer Requests
 GET http://localhost:4000/api/transfers
@@ -110,6 +116,8 @@ PUT http://localhost:4000/api/transfers/reject/1
 ### Send notification
 POST http://localhost:4000/api/notifications
 Content-Type: application/json
+Accept: application/json
+
 {
   "fromTeacherId": 1,
   "toTeacherId": 3,
@@ -117,8 +125,9 @@ Content-Type: application/json
 }
 
 
+
 ### Get notifications for user
-GET http://localhost:4000/api/notifications/10
+GET http://localhost:4000/api/notifications/4
 Accept: application/json
 
 ### Mark notification as read
