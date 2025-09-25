@@ -12,20 +12,61 @@ const transporter = nodemailer.createTransport({
 
 const sendEmail = async (to, subject, message, fromName = "School System") => {
   const htmlTemplate = `
-    <div style="font-family: Arial, sans-serif; line-height:1.6; color:#333; max-width:600px; margin:0 auto; padding:20px; border:1px solid #e0e0e0; border-radius:8px;">
-      <header style="text-align:center; margin-bottom:30px;">
-        <h1 style="color:#2E86C1; font-size:24px; margin:0;">School System Notification</h1>
-      </header>
-      <p>Hello,</p>
-      <p>${message}</p>
-      <p>From: <strong>${fromName}</strong></p>
-      <p>Please <a href="${process.env.APP_URL}/login" style="color:#2E86C1;">log in</a> to your account.</p>
-      <hr style="border-top:1px solid #e0e0e0; margin:30px 0;">
-      <footer style="font-size:13px; color:#999; text-align:center;">
-        This is an automated message. Do not reply directly.
-      </footer>
-    </div>
-  `;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>School System Notification</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f4f4; font-family:Arial,sans-serif;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#f4f4f4">
+    <tr>
+      <td align="center" style="padding:20px;">
+        <!-- Container -->
+        <table width="600" border="0" cellspacing="0" cellpadding="0" bgcolor="#ffffff" style="border-radius:8px; overflow:hidden; border:1px solid #e0e0e0;">
+          <!-- Header -->
+          <tr>
+            <td align="center" bgcolor="#2E86C1" style="padding:30px;">
+              <h1 style="margin:0; font-size:26px; color:#ffffff; font-weight:normal;">School System</h1>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding:30px; color:#333; font-size:15px; line-height:1.6;">
+              <p>Hello,</p>
+              <p>${message}</p>
+              <p>From: <strong>${fromName}</strong></p>
+              <p style="margin:30px 0;">
+                <a href="${process.env.APP_URL}/login" 
+                   style="background:#2E86C1; color:#ffffff; text-decoration:none; padding:12px 24px; border-radius:5px; display:inline-block; font-size:15px;">
+                  Log in to your account
+                </a>
+              </p>
+            </td>
+          </tr>
+          <!-- Divider -->
+          <tr>
+            <td style="padding:0 30px;">
+              <hr style="border:none; border-top:1px solid #e0e0e0; margin:0;">
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding:20px 30px; font-size:12px; color:#777; text-align:center;">
+              <p style="margin:0;">This is an automated message. Please do not reply.</p>
+              <p style="margin:5px 0 0;">&copy; ${new Date().getFullYear()} School System</p>
+            </td>
+          </tr>
+        </table>
+        <!-- End Container -->
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`;
+
 
   try {
     await transporter.sendMail({

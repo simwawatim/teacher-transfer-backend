@@ -22,10 +22,14 @@ exports.requestTransfer = async (req, res) => {
     if (existing) {
       return res.status(400).json({ message: 'You already have a pending transfer request.' });
     }
+    console.log('teacher:', teacher);
+console.log('teacher.currentSchoolId:', teacher.currentSchoolId);
 
     const transfer = await TransferRequest.create({
+
+      
       teacherId,
-      fromSchoolId: teacher.schoolId,
+      fromSchoolId: teacher.currentSchoolId,
       toSchoolId,
       status: 'pending'
     });
