@@ -6,9 +6,22 @@ const Teacher = sequelize.define('Teacher', {
   firstName: { type: DataTypes.STRING, allowNull: false },
   lastName: { type: DataTypes.STRING, allowNull: false },
   profilePicture: { type: DataTypes.STRING },
-  email: { type: DataTypes.STRING, allowNull: false, unique: true, validate: { isEmail: true } },
-  nrc: { type: DataTypes.STRING, allowNull: false, unique: true },
-  tsNo: { type: DataTypes.STRING, allowNull: false, unique: true },
+  email: { 
+  type: DataTypes.STRING, 
+  allowNull: false, 
+  validate: { isEmail: true } 
+},
+  nrc: { 
+    type: DataTypes.STRING, 
+    allowNull: false, 
+
+  },
+  tsNo: 
+    { 
+      
+      type: DataTypes.STRING, 
+      allowNull: false, 
+     },
   address: { type: DataTypes.STRING },
   maritalStatus: { type: DataTypes.ENUM('Single','Married','Divorced','Widowed') },
 
