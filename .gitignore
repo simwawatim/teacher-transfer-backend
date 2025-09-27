@@ -22,4 +22,10 @@ Thumbs.db
 # Optional: local database files
 *.sqlite
 *.db
-./uploads
+
+# Uploads directory (including PDF files and other uploads)
+uploads/
+
+# Or if you want to be more specific:
+# uploads/**/*.pdf
+# uploads/teachers/
