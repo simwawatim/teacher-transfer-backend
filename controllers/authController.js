@@ -24,94 +24,98 @@ function isValidEmail(email) {
 }
 
 exports.register = async (req, res) => {
+
+
   try {
     const { role, teacherData } = req.body;
-    const validRoles = ["teacher", "headteacher", "admin"];
 
-    if (!role || !validRoles.includes(role)) {
-      return res.status(400).json({ message: `Role must be one of: ${validRoles.join(", ")}` });
+    console.log("Body:", req.body);           // prints the JSON fields
+    console.log("Files:", req.files); 
+
+    // Validate role
+    if (!role || !["teacher", "headteacher", "admin"].includes(role)) {
+      return res.status(400).json({ message: "Invalid role" });
     }
 
     let teacherProfile = null;
-    let username, password;
-    let userEmail = null;
+    let username, password, userEmail;
 
     if (role === "teacher" || role === "headteacher") {
-      if (!teacherData) return res.status(400).json({ message: "Teacher data is required" });
+      if (!teacherData) return res.status(400).json({ message: "Teacher data missing" });
 
-      const requiredFields = [
-        "firstName",
-        "lastName",
-        "email",
-        "currentSchoolId",
-        "currentPosition",
-        "medicalCertificate",
-        "academicQualifications",
-        "professionalQualifications"
-      ];
-
-      for (const field of requiredFields) {
-        if (!teacherData[field]) {
-          return res.status(400).json({ message: `${field} is required for teacher profile` });
+      // Parse teacherData fields if sent as JSON strings
+      const parsedTeacherData = {};
+      for (let key in teacherData) {
+        try {
+          parsedTeacherData[key] = JSON.parse(teacherData[key]);
+        } catch {
+          parsedTeacherData[key] = teacherData[key];
         }
       }
 
-      if (!isValidEmail(teacherData.email)) {
-        return res.status(400).json({ message: "Invalid email format" });
+      // Access uploaded files and store **paths as strings**
+      parsedTeacherData.medicalCertificate = req.files.medicalCertificate?.[0]?.path || null;
+      parsedTeacherData.academicQualifications = req.files.academicQualifications?.[0]?.path || null;
+      parsedTeacherData.professionalQualifications = req.files.professionalQualifications?.[0]?.path || null;
+
+      // Validate required files
+      const requiredFiles = [
+        { key: "medicalCertificate", name: "Medical Certificate" },
+        { key: "academicQualifications", name: "Academic Qualifications" },
+        { key: "professionalQualifications", name: "Professional Qualifications" },
+      ];
+
+      for (const { key, name } of requiredFiles) {
+        if (!parsedTeacherData[key]) {
+          return res.status(400).json({ message: `${name} file is required.` });
+        }
       }
 
-      const school = await School.findByPk(teacherData.currentSchoolId);
-      if (!school) return res.status(400).json({ message: "Current school does not exist" });
+      // Convert experience to JSON string if array/object
+      parsedTeacherData.experience = JSON.stringify(parsedTeacherData.experience || []);
 
-      teacherProfile = await Teacher.create({
-        ...teacherData,
-        experience: JSON.stringify(teacherData.experience || [])
-      });
+      // Create teacher profile
+      teacherProfile = await Teacher.create(parsedTeacherData);
 
-      username = generateUsername(teacherData.firstName, teacherData.lastName);
+      // Generate credentials
+      username = generateUsername(parsedTeacherData.firstName, parsedTeacherData.lastName);
       password = generateRandomPassword();
-      userEmail = teacherData.email;
+      userEmail = parsedTeacherData.email;
     } else {
+      // Admin or other role
       username = "admin" + Math.floor(10 + Math.random() * 90);
       password = generateRandomPassword();
     }
 
-    const existingUser = await User.findOne({ where: { username } });
-    if (existingUser) username += Math.floor(Math.random() * 100);
-
+    // Hash password and create user
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await User.create({
       username,
       password: hashedPassword,
       role,
-      teacherProfileId: teacherProfile ? teacherProfile.id : null
+      teacherProfileId: teacherProfile?.id || null
     });
 
+    // Send welcome email
     if (userEmail) {
-      const fullName = `${teacherData.firstName} ${teacherData.lastName}`;
-      const emailMessage = `
-        Welcome ${fullName}!<br/>
-        Your account has been created on the School System.<br/>
-        Username: ${username}<br/>
-        Password: ${password}<br/>
-        Please log in and change your password immediately.
-      `;
-      await sendEmail(userEmail, "Welcome to School System", emailMessage, "School System");
+      const fullName = `${teacherProfile.firstName} ${teacherProfile.lastName}`;
+      await sendEmail(userEmail, "Welcome", `Welcome ${fullName}. Username: ${username}, Password: ${password}`);
     }
 
     res.status(201).json({
-      message: teacherProfile ? "User, teacher profile created, and email sent successfully" : "User registered successfully",
+      message: teacherProfile ? "Teacher created successfully" : "User registered successfully",
       userId: newUser.id,
       username,
       password,
-      teacherProfileId: teacherProfile ? teacherProfile.id : null
+      teacherProfileId: teacherProfile?.id
     });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: err.message || "An unknown error occurred" });
+    res.status(500).json({ message: err.message || "Server error" });
   }
 };
+
 
 exports.login = async (req, res) => {
   const { username, password } = req.body;
