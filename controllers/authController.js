@@ -24,13 +24,11 @@ function isValidEmail(email) {
 }
 
 exports.register = async (req, res) => {
-
-
   try {
     const { role, teacherData } = req.body;
 
-    console.log("Body:", req.body);           // prints the JSON fields
-    console.log("Files:", req.files); 
+    console.log("Body:", req.body);
+    console.log("Files:", req.files);
 
     // Validate role
     if (!role || !["teacher", "headteacher", "admin"].includes(role)) {
@@ -41,7 +39,9 @@ exports.register = async (req, res) => {
     let username, password, userEmail;
 
     if (role === "teacher" || role === "headteacher") {
-      if (!teacherData) return res.status(400).json({ message: "Teacher data missing" });
+      if (!teacherData) {
+        return res.status(400).json({ message: "Teacher data missing" });
+      }
 
       // Parse teacherData fields if sent as JSON strings
       const parsedTeacherData = {};
@@ -53,7 +53,15 @@ exports.register = async (req, res) => {
         }
       }
 
-      // Access uploaded files and store **paths as strings**
+      // Map currentSchoolId to schoolId for consistency
+      parsedTeacherData.schoolId = parsedTeacherData.currentSchoolId;
+
+      // Validate that teacher belongs to a school
+      if (!parsedTeacherData.schoolId) {
+        return res.status(400).json({ message: "Teacher must belong to a school." });
+      }
+
+      // Handle uploaded files and store paths
       parsedTeacherData.medicalCertificate = req.files.medicalCertificate?.[0]?.path || null;
       parsedTeacherData.academicQualifications = req.files.academicQualifications?.[0]?.path || null;
       parsedTeacherData.professionalQualifications = req.files.professionalQualifications?.[0]?.path || null;
@@ -71,18 +79,19 @@ exports.register = async (req, res) => {
         }
       }
 
-      // Convert experience to JSON string if array/object
+      // Convert experience to JSON string if it's array/object
       parsedTeacherData.experience = JSON.stringify(parsedTeacherData.experience || []);
 
-      // Create teacher profile
+      // Create teacher profile in DB
       teacherProfile = await Teacher.create(parsedTeacherData);
 
       // Generate credentials
       username = generateUsername(parsedTeacherData.firstName, parsedTeacherData.lastName);
       password = generateRandomPassword();
       userEmail = parsedTeacherData.email;
+
     } else {
-      // Admin or other role
+      // Admin or other roles
       username = "admin" + Math.floor(10 + Math.random() * 90);
       password = generateRandomPassword();
     }
@@ -96,10 +105,14 @@ exports.register = async (req, res) => {
       teacherProfileId: teacherProfile?.id || null
     });
 
-    // Send welcome email
+    // Send welcome email if teacher
     if (userEmail) {
       const fullName = `${teacherProfile.firstName} ${teacherProfile.lastName}`;
-      await sendEmail(userEmail, "Welcome", `Welcome ${fullName}. Username: ${username}, Password: ${password}`);
+      await sendEmail(
+        userEmail,
+        "Welcome",
+        `Welcome ${fullName}. Username: ${username}, Password: ${password}`
+      );
     }
 
     res.status(201).json({
@@ -117,6 +130,7 @@ exports.register = async (req, res) => {
 };
 
 
+
 exports.login = async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -129,7 +143,14 @@ exports.login = async (req, res) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) return res.status(401).json({ message: 'Invalid password' });
 
-    const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const tokenPayload = {
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      teacherProfileId: user.teacherProfileId || null 
+    };
+
+    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.json({ token, user });
   } catch (err) {

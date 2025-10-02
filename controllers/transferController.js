@@ -63,19 +63,36 @@ exports.getTransferRequests = async (req, res) => {
 
     if (user.role === 'teacher') {
       // Teachers only see their own requests
-      whereClause.teacherId = user.id;
-      console.log(`[INFO] Applying filter for teacher: teacherId=${user.id}`);
+      if (!user.teacherProfileId) {
+        console.error(`[ERROR] Teacher profile not linked. userId=${user.id}`);
+        return res.status(400).json({ message: "Teacher profile not linked to this account." });
+      }
+
+      whereClause.teacherId = user.teacherProfileId;
+      console.log(`[INFO] Applying filter for teacher: teacherId=${user.teacherProfileId}`);
+
     } else if (user.role === 'headteacher') {
-      // Headteachers: find their schoolId from Teacher record
-      const teacher = await Teacher.findByPk(user.id);
+      // Headteachers: find their schoolId from Teacher profile
+      if (!user.teacherProfileId) {
+        console.error(`[ERROR] Headteacher profile not linked. userId=${user.id}`);
+        return res.status(400).json({ message: "Headteacher profile not linked to this account." });
+      }
+
+      const teacher = await Teacher.findByPk(user.teacherProfileId, {
+        include: [{ model: School, as: 'currentSchool' }]
+      });
+
       if (!teacher || !teacher.currentSchoolId) {
         console.error(`[ERROR] Headteacher does not belong to any school. userId=${user.id}`);
         return res.status(400).json({ message: "Headteacher does not belong to any school." });
       }
+
       // Headteacher sees all requests from their school
       whereClause.fromSchoolId = teacher.currentSchoolId;
       console.log(`[INFO] Applying filter for headteacher: fromSchoolId=${teacher.currentSchoolId}`);
+
     } else {
+      // Admin sees all
       console.log(`[INFO] Admin user: no filters applied`);
     }
 
@@ -97,24 +114,26 @@ exports.getTransferRequests = async (req, res) => {
 
     console.log(`[INFO] Found ${requests.length} transfer requests`);
 
-    // ----------------------------
-    // Print available transfers
-    // ----------------------------
+    // Log available transfers
     if (requests.length > 0) {
       console.log(`[INFO] Available Transfers:`);
       requests.forEach(reqItem => {
-        console.log(`- Transfer ID: ${reqItem.id}, Teacher: ${reqItem.teacher.firstName} ${reqItem.teacher.lastName}, From: ${reqItem.fromSchool?.name || 'N/A'}, To: ${reqItem.toSchool?.name || 'N/A'}`);
+        console.log(
+          `- Transfer ID: ${reqItem.id}, Teacher: ${reqItem.teacher.firstName} ${reqItem.teacher.lastName}, From: ${reqItem.fromSchool?.name || 'N/A'}, To: ${reqItem.toSchool?.name || 'N/A'}`
+        );
       });
     } else {
       console.log(`[INFO] No available transfers found.`);
     }
 
     res.status(200).json(requests);
+
   } catch (err) {
     console.error(`[ERROR] Failed to get transfer requests: ${err.message}`, err);
     res.status(500).json({ message: err.message });
   }
 };
+
 
 // --------------------
 // Update transfer status
