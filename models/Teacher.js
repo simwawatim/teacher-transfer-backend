@@ -19,7 +19,7 @@ const Teacher = sequelize.define('Teacher', {
   professionalQualifications: { type: DataTypes.STRING, allowNull: true },
 
   currentSchoolType: { type: DataTypes.ENUM('Community','Primary','Secondary') },
-  currentPosition: { type: DataTypes.ENUM('Class Teacher','Subject Teacher','Senior Teacher','HOD','Deputy Head','Head Teacher') },
+  currentPosition: { type: DataTypes.ENUM('Class Teacher', 'Teacher','Subject Teacher','Senior Teacher','HOD','Deputy Head','Head Teacher') },
   subjectSpecialization: { type: DataTypes.STRING },
   experience: { type: DataTypes.TEXT },
 });

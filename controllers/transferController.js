@@ -1,5 +1,6 @@
 const TransferRequest = require('../models/TransferRequest');
 const Teacher = require('../models/Teacher');
+const User = require('../models/User');
 const School = require('../models/School');
 const { sendEmail } = require('../utils/email'); 
 
@@ -13,8 +14,15 @@ exports.requestTransfer = async (req, res) => {
     const teacher = await Teacher.findByPk(teacherId);
     if (!teacher) return res.status(404).json({ message: 'Teacher not found' });
 
+
     const toSchool = await School.findByPk(toSchoolId);
     if (!toSchool) return res.status(404).json({ message: 'Target school not found' });
+
+
+    if (teacher.currentSchoolId === toSchoolId) {
+      return res.status(400).json({ message: "You cannot request a transfer to your current school." });
+    }
+
 
     const existing = await TransferRequest.findOne({
       where: { teacherId, status: 'pending' }
@@ -23,7 +31,7 @@ exports.requestTransfer = async (req, res) => {
       return res.status(400).json({ message: 'You already have a pending transfer request.' });
     }
     console.log('teacher:', teacher);
-console.log('teacher.currentSchoolId:', teacher.currentSchoolId);
+    console.log('teacher.currentSchoolId:', teacher.currentSchoolId);
 
     const transfer = await TransferRequest.create({
 
@@ -60,6 +68,7 @@ exports.getTransferRequests = async (req, res) => {
     console.log(`[INFO] User making request: id=${user.id}, role=${user.role}`);
 
     let whereClause = {};
+    
 
     if (user.role === 'teacher') {
       // Teachers only see their own requests
