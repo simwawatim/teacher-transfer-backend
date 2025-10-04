@@ -87,8 +87,9 @@ exports.deleteTeacher = async (req, res) => {
 };
 
 exports.getProfilePicture = async (req, res) => {
+  console.log("[INFO] Fetching profile picture for user:", req.user);
   try {
-    const teacherId = req.user.id;
+    const teacherId = req.user.teacherProfileId;
 
     const teacher = await Teacher.findByPk(teacherId, {
       attributes: ['profilePicture']
