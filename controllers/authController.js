@@ -170,7 +170,8 @@ exports.register = async (req, res) => {
 
 
 
-const JWT_SECRET = 'your_static_secret_here';
+const JWT_SECRET = "3F9d$g7!aBz#8LpQv&k9XsYw^Rt2GhUe!4JmPqLz1YwQp8RkVs7NxDz2MjFqLtHu"; 
+
 
 exports.login = async (req, res) => {
   const { username, password } = req.body;
