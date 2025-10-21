@@ -23,7 +23,7 @@ Accept: application/json
 
 
 ### Login User
-POST https://teacher-transfer-backend-7r7o.vercel.app/api/auth/login
+POST https://teacher-transfer-backend.vercel.app/api/auth/login
 Content-Type: application/json
 Accept: application/json
 

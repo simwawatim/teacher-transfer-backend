@@ -170,6 +170,8 @@ exports.register = async (req, res) => {
 
 
 
+const JWT_SECRET = 'your_static_secret_here';
+
 exports.login = async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -177,6 +179,7 @@ exports.login = async (req, res) => {
       where: { username },
       include: [{ model: Teacher, as: 'teacherProfile' }]
     });
+
     if (!user) return res.status(400).json({ message: 'User not found' });
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -186,10 +189,10 @@ exports.login = async (req, res) => {
       id: user.id,
       username: user.username,
       role: user.role,
-      teacherProfileId: user.teacherProfileId || null 
+      teacherProfileId: user.teacherProfileId || null
     };
 
-    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '1h' });
 
     res.json({ token, user });
   } catch (err) {
@@ -197,3 +200,4 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
