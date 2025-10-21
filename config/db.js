@@ -1,31 +1,17 @@
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize(
-  'neondb',                // database name
-  'neondb_owner',          // username
-  'npg_7fsbyUw2rLcX',      // password
-  {
-    host: 'ep-sweet-poetry-ae6qxj09-pooler.c-2.us-east-2.aws.neon.tech', // Neon host
-    port: 5432,            // default PostgreSQL port
-    dialect: 'postgres',
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false, // Neon SSL
-      },
-    },
-    logging: false, // turn off SQL logging
-  }
-);
+// Explicitly require pg
+require('pg');
+require('pg-hstore');
 
-// Test connection immediately
-(async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('✅ PostgreSQL connected successfully.');
-  } catch (err) {
-    console.error('❌ PostgreSQL connection failed:', err);
-  }
-})();
+const sequelize = new Sequelize('neondb', 'neondb_owner', 'npg_7fsbyUw2rLcX', {
+  host: 'ep-sweet-poetry-ae6qxj09-pooler.c-2.us-east-2.aws.neon.tech',
+  port: 5432,
+  dialect: 'postgres',
+  dialectOptions: {
+    ssl: { require: true, rejectUnauthorized: false },
+  },
+  logging: false,
+});
 
 module.exports = sequelize;
