@@ -8,27 +8,25 @@ const bcrypt = require('bcrypt');
 const seed = async () => {
   try {
     await sequelize.sync({ force: false });
-
-    // 1️⃣ Find or create a school
     let school = await School.findOne();
     if (!school) {
       console.log("No school found. Creating a default school...");
       school = await School.create({
         name: "Default Primary School",
         type: "Primary",
-        address: "123 School Rd"
+        address: "123 School Rd",
+        code: "DPS001"
       });
       console.log("School created:", school.toJSON());
     }
 
-    // 2️⃣ Create a teacher
     const teacher = await Teacher.create({
       firstName: "John",
       lastName: "Doe",
       profilePicture: "profile.jpg",
-      email: "john.doe@example.com",
-      nrc: "123456789",
-      tsNo: "TS12345",
+      email: "test.admin@example.com",
+      nrc: "120456789",
+      tsNo: "TS12349",
       address: "123 Main St",
       maritalStatus: "Single",
       medicalCertificate: "certificate.pdf",
@@ -42,15 +40,13 @@ const seed = async () => {
     });
 
     console.log("Teacher created:", teacher.toJSON());
-
-    // 3️⃣ Create a user linked to the teacher
     const rawPassword = "password123";
     const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
     const user = await User.create({
-      username: "john_doe",
+      username: "testadmin",
       password: hashedPassword,
-      role: "teacher",
+      role: "admin",
       teacherProfileId: teacher.id
     });
 
@@ -59,7 +55,7 @@ const seed = async () => {
       username: user.username,
       role: user.role,
       teacherProfileId: user.teacherProfileId,
-      password: rawPassword // ✅ raw password logged
+      password: rawPassword 
     });
 
     console.log("Seeding completed successfully!");

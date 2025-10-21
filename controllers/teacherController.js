@@ -99,8 +99,6 @@ exports.getProfilePicture = async (req, res) => {
       return res.status(404).json({ message: 'Profile picture not found' });
     }
 
-    // optional debug log
-    // console.log("Profile picture path:", teacher.profilePicture);
 
     const profilePath = teacher.profilePicture.replace(/^\/+/, '');
     const fullUrl = `http://localhost:4000/${profilePath}`;

@@ -4,9 +4,6 @@ const User = require('../models/User');
 const School = require('../models/School');
 const { sendEmail } = require('../utils/email'); 
 
-// --------------------
-// Request a transfer
-// --------------------
 exports.requestTransfer = async (req, res) => {
   const { teacherId, toSchoolId } = req.body;
 
@@ -41,16 +38,14 @@ exports.requestTransfer = async (req, res) => {
       toSchoolId,
       status: 'pending'
     });
-
-    // Send email to teacher about the transfer request
     if (teacher.email) {
       const message = `Hello ${teacher.firstName},
 
-Your transfer request from ${teacher.schoolId} to ${toSchool.name} has been submitted and is pending approval.
+        Your transfer request from ${teacher.schoolId} to ${toSchool.name} has been submitted and is pending approval.
 
-You will be notified once the status changes.`;
-      await sendEmail(teacher.email, 'Transfer Request Submitted', message, 'School System');
-    }
+        You will be notified once the status changes.`;
+              await sendEmail(teacher.email, 'Transfer Request Submitted', message, 'School System');
+            }
 
     res.status(201).json(transfer);
   } catch (err) {
@@ -59,9 +54,6 @@ You will be notified once the status changes.`;
   }
 };
 
-// --------------------
-// Get all transfer requests
-// --------------------
 exports.getTransferRequests = async (req, res) => {
   try {
     const user = req.user;

@@ -32,8 +32,6 @@ exports.register = async (req, res) => {
 
     console.log("Body:", req.body);
     console.log("Files:", req.files);
-
-    // 1. Validate role
     if (!role || !["teacher", "headteacher", "admin"].includes(role)) {
       return res.status(400).json({ message: "Invalid role" });
     }
@@ -41,13 +39,11 @@ exports.register = async (req, res) => {
     let teacherProfile = null;
     let username, password, userEmail;
 
-    // 2. Teacher/headteacher flow
     if (role === "teacher" || role === "headteacher") {
       if (!teacherData) {
         return res.status(400).json({ message: "Teacher data missing" });
       }
 
-      // Parse teacherData (in case it's stringified in multipart/form-data)
       const parsedTeacherData = {};
       for (let key in teacherData) {
         try {
@@ -59,7 +55,6 @@ exports.register = async (req, res) => {
 
       parsedTeacherData.schoolId = parsedTeacherData.currentSchoolId;
 
-      // ✅ Required fields
       const requiredFields = [
         { key: "firstName", name: "First Name" },
         { key: "lastName", name: "Last Name" },
@@ -75,8 +70,6 @@ exports.register = async (req, res) => {
           return res.status(400).json({ message: `${name} is required.` });
         }
       }
-
-      // ✅ Email format check
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(parsedTeacherData.email)) {
         return res.status(400).json({ message: "Invalid email format." });
@@ -86,8 +79,6 @@ exports.register = async (req, res) => {
       if (!nrcRegex.test(parsedTeacherData.nrc)) {
         return res.status(400).json({ message: "Invalid NRC format. Expected format: 123456/78/9" });
       }
-
-      // ✅ Marital status check
       if (
         parsedTeacherData.maritalStatus &&
         !["Single", "Married", "Divorced", "Widowed"].includes(parsedTeacherData.maritalStatus)
@@ -95,17 +86,15 @@ exports.register = async (req, res) => {
         return res.status(400).json({ message: "Invalid marital status." });
       }
 
-      // ✅ Check duplicates (email, NRC, tsNo)
-      // ✅ Check duplicates (email, NRC, tsNo)
-const existingTeacher = await Teacher.findOne({
-  where: {
-    [Op.or]: [
-      { email: parsedTeacherData.email },
-      { nrc: parsedTeacherData.nrc },
-      { tsNo: parsedTeacherData.tsNo }
-    ]
-  }
-});
+      const existingTeacher = await Teacher.findOne({
+        where: {
+          [Op.or]: [
+            { email: parsedTeacherData.email },
+            { nrc: parsedTeacherData.nrc },
+            { tsNo: parsedTeacherData.tsNo }
+          ]
+        }
+      });
 
       if (existingTeacher) {
         let takenField;
@@ -115,7 +104,6 @@ const existingTeacher = await Teacher.findOne({
         return res.status(400).json({ message: `${takenField} is already registered.` });
       }
 
-      // ✅ Handle uploaded files
       parsedTeacherData.medicalCertificate = req.files.medicalCertificate?.[0]?.path || null;
       parsedTeacherData.academicQualifications = req.files.academicQualifications?.[0]?.path || null;
       parsedTeacherData.professionalQualifications = req.files.professionalQualifications?.[0]?.path || null;
@@ -131,26 +119,23 @@ const existingTeacher = await Teacher.findOne({
         }
       }
 
-      // ✅ Convert experience to string if object/array
+  
       if (parsedTeacherData.experience && typeof parsedTeacherData.experience !== "string") {
         parsedTeacherData.experience = JSON.stringify(parsedTeacherData.experience);
       }
-
-      // ✅ Create teacher profile
       teacherProfile = await Teacher.create(parsedTeacherData);
 
-      // Generate credentials
+
       username = generateUsername(parsedTeacherData.firstName, parsedTeacherData.lastName);
       password = generateRandomPassword();
       userEmail = parsedTeacherData.email;
 
     } else {
-      // 3. Admin flow
       username = "admin" + Math.floor(10 + Math.random() * 90);
       password = generateRandomPassword();
     }
 
-    // 4. Hash password and create user
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await User.create({
       username,
@@ -159,7 +144,7 @@ const existingTeacher = await Teacher.findOne({
       teacherProfileId: teacherProfile?.id || null,
     });
 
-    // 5. Send welcome email
+
     if (userEmail) {
       const fullName = `${teacherProfile.firstName} ${teacherProfile.lastName}`;
       await sendEmail(
@@ -169,7 +154,6 @@ const existingTeacher = await Teacher.findOne({
       );
     }
 
-    // ✅ Success response
     res.status(201).json({
       message: teacherProfile ? "Teacher created successfully" : "User registered successfully",
       userId: newUser.id,

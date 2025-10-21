@@ -1,16 +1,22 @@
-
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
 const sequelize = new Sequelize(
-  process.env.MYSQL_DATABASE,
-  process.env.MYSQL_USER,
-  process.env.MYSQL_PASSWORD || '',
+  'neondb',               
+  'neondb_owner',            
+  'npg_7fsbyUw2rLcX',        
   {
-    host: process.env.MYSQL_HOST,
-    dialect: 'mysql',
-    logging: false,
+    host: 'ep-sweet-poetry-ae6qxj09-pooler.c-2.us-east-2.aws.neon.tech', 
+    port: 5432,               
+    dialect: 'postgres',      
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false, 
+      },
+    },
+    logging: true,         
   }
 );
 
-module.exports = sequelize; 
+module.exports = sequelize;
