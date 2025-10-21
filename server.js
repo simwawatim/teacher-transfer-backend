@@ -1,8 +1,7 @@
 const express = require('express');
-require('dotenv').config();
 const path = require('path');
 const cors = require('cors');
-const sequelize = require('./config/db'); // Your Sequelize instance
+const sequelize = require('./config/db'); // Sequelize instance
 
 // Routes
 const authRoutes = require('./routes/authRoutes');
@@ -35,7 +34,7 @@ app.use('/api/notifications', notificationRoutes);
 app.get('/', (req, res) => res.send('Server is running'));
 
 // Start server after syncing DB
-const PORT = process.env.PORT || 4000;
+const PORT = 4000;
 sequelize.sync({ alter: true })
   .then(() => {
     console.log('Database synced successfully');

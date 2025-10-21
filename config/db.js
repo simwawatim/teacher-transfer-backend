@@ -1,23 +1,24 @@
 const { Sequelize } = require('sequelize');
 
 const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASSWORD,
+  'neondb',                // database name
+  'neondb_owner',          // username
+  'npg_7fsbyUw2rLcX',      // password
   {
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT || 5432,
+    host: 'ep-sweet-poetry-ae6qxj09-pooler.c-2.us-east-2.aws.neon.tech', // Neon host
+    port: 5432,            // default PostgreSQL port
     dialect: 'postgres',
     dialectOptions: {
       ssl: {
         require: true,
-        rejectUnauthorized: false, 
+        rejectUnauthorized: false, // Neon SSL
       },
     },
-    logging: false,
+    logging: false, // turn off SQL logging
   }
 );
 
+// Test connection immediately
 (async () => {
   try {
     await sequelize.authenticate();
@@ -26,3 +27,5 @@ const sequelize = new Sequelize(
     console.error('❌ PostgreSQL connection failed:', err);
   }
 })();
+
+module.exports = sequelize;
