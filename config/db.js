@@ -1,6 +1,4 @@
 const { Sequelize } = require('sequelize');
-
-// Explicitly require pg
 require('pg');
 require('pg-hstore');
 

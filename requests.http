@@ -48,7 +48,7 @@ Accept: application/json
 
 
 ### Get All Schools
-GET http://localhost:4000/api/schools
+GET https://teacher-transfer-backend.onrender.com/api/schools
 Accept: application/json
 
 
