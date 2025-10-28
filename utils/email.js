@@ -1,14 +1,25 @@
 const nodemailer = require('nodemailer');
 
+// Static configuration
+const SMTP_HOST = "smtp.gmail.com";
+const SMTP_PORT = 587;
+const SMTP_USER = "landernerd4@gmail.com"; 
+const SMTP_PASS = "ojduiztpldjszuwy"; 
+const APP_URL = "https://teacher-transfer-backend.onrender.com";
+
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT || 587,
+  host: SMTP_HOST,
+  port: SMTP_PORT,
   secure: false,
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
+    user: SMTP_USER,
+    pass: SMTP_PASS
+  },
+  tls: {
+    rejectUnauthorized: false 
   }
 });
+
 
 const sendEmail = async (to, subject, message, fromName = "School System") => {
   const htmlTemplate = `
