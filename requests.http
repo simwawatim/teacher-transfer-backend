@@ -23,13 +23,13 @@ Accept: application/json
 
 
 ### Login User
-POST https://teacher-transfer-backend.vercel.app/api/auth/login
+POST https://teacher-transfer-backend.onrender.com/api/auth/login
 Content-Type: application/json
 Accept: application/json
 
 {
-  "username": "timothy.simwawa",
-  "password": "123456"
+  "username": "testadmin",
+  "password": "password123"
 }
 
 
@@ -49,7 +49,8 @@ Accept: application/json
 
 ### Get All Schools
 GET https://teacher-transfer-backend.onrender.com/api/schools
-Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0ZXN0YWRtaW4iLCJyb2xlIjoiYWRtaW4iLCJ0ZWFjaGVyUHJvZmlsZUlkIjoyLCJpYXQiOjE3NjE2MzU3ODAsImV4cCI6MTc2MTYzOTM4MH0.nCVuliB5xupaG9ghJ6Tz7HlwsmmfhPpbLD09mmFVk-I
+
 
 
 ### Get Single School

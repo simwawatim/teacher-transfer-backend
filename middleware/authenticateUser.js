@@ -8,7 +8,8 @@ const authenticateUser = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); 
+    const JWT_SECRET = "3F9d$g7!aBz#8LpQv&k9XsYw^Rt2GhUe!4JmPqLz1YwQp8RkVs7NxDz2MjFqLtHu"; 
+    const decoded = jwt.verify(token, JWT_SECRET); 
     req.user = decoded;
     next();
   } catch (err) {
