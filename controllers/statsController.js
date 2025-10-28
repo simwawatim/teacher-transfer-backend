@@ -42,11 +42,12 @@ const getStats = async (req, res) => {
       where: { status: "pending", ...transferCondition }
     });
 
-    // Months
+    // Prepare months array
     const months = [
       "Jan","Feb","Mar","Apr","May","Jun",
       "Jul","Aug","Sep","Oct","Nov","Dec"
     ];
+
     const transferByMonth = months.map(month => ({
       month,
       pending: 0,
@@ -54,18 +55,20 @@ const getStats = async (req, res) => {
       rejected: 0
     }));
 
-    // Fetch all transfers this year grouped by month and status
+    // Current year
     const currentYear = new Date().getFullYear();
+
+    // Fetch transfers grouped by month & status
     const transfers = await Transfer.findAll({
       attributes: [
-        [Sequelize.fn("MONTH", Sequelize.col("createdAt")), "month"],
+        [Sequelize.literal(`EXTRACT(MONTH FROM "createdAt")`), "month"],
         "status",
         [Sequelize.fn("COUNT", Sequelize.col("id")), "count"]
       ],
       where: {
         ...transferCondition,
         [Op.and]: Sequelize.where(
-          Sequelize.fn("YEAR", Sequelize.col("createdAt")),
+          Sequelize.literal(`EXTRACT(YEAR FROM "createdAt")`),
           currentYear
         )
       },
@@ -73,16 +76,20 @@ const getStats = async (req, res) => {
       raw: true
     });
 
-    // Map counts into transferByMonth
+    // Map counts to transferByMonth array
     transfers.forEach(t => {
-      const monthIndex = t.month - 1; // MONTH() returns 1-12
-      transferByMonth[monthIndex][t.status.toLowerCase()] = parseInt(t.count, 10);
+      const monthIndex = parseInt(t.month, 10) - 1; // EXTRACT returns 1-12
+      if (monthIndex >= 0 && monthIndex < 12) {
+        transferByMonth[monthIndex][t.status.toLowerCase()] = parseInt(t.count, 10);
+      }
     });
 
+    // Return stats
     res.json({
       totals: { totalTeachers, totalSchools, pendingTransfers },
       transferByMonth
     });
+
   } catch (err) {
     console.error("Error fetching stats:", err);
     res.status(500).json({ message: "Failed to fetch stats" });
