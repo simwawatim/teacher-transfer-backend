@@ -4,10 +4,6 @@ const User = require('../models/User');
 const School = require('../models/School');
 const sendEmailViaAPI = require('../utils/sendEmailViaAPI');
 
-const Teacher = require('../models/Teacher');
-const School = require('../models/School');
-const TransferRequest = require('../models/TransferRequest');
-const sendEmailViaAPI = require('../utils/sendEmailViaAPI');
 
 exports.requestTransfer = async (req, res) => {
   const { teacherId, toSchoolId } = req.body;
