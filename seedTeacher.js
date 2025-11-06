@@ -1,4 +1,3 @@
-// seedTeacher.js
 const sequelize = require('./config/db');
 const Teacher = require('./models/Teacher');
 const User = require('./models/User');

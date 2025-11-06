@@ -4,6 +4,7 @@ const Transfer = require("../models/TransferRequest");
 const User = require("../models/User");
 const { Op, Sequelize } = require("sequelize");
 
+
 const getStats = async (req, res) => {
   try {
     let teacherSchoolId = null;

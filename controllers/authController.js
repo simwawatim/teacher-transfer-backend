@@ -4,7 +4,8 @@ const sequelize = require('../config/db');
 const User = require('../models/User');
 const Teacher = require('../models/Teacher');
 const School = require('../models/School');
-const { sendEmail } = require('../utils/email');
+const sendEmailViaAPI = require('../utils/sendEmailViaAPI');
+
 const { Op } = require("sequelize");
 
 
@@ -146,12 +147,24 @@ exports.register = async (req, res) => {
 
 
     if (userEmail) {
-      const fullName = `${teacherProfile.firstName} ${teacherProfile.lastName}`;
-      await sendEmail(
-        userEmail,
-        "Welcome to the System",
-        `Dear ${fullName},\n\nYour account has been created.\n\nUsername: ${username}\nPassword: ${password}\n\nPlease change your password after first login.`
-      );
+      const fullName = teacherProfile ? `${teacherProfile.firstName} ${teacherProfile.lastName}` : username;
+
+      const emailMessage = `
+        Hello <b>${fullName}</b>,<br><br>
+        Your account has been created successfully.<br>
+        <b>Username:</b> ${username}<br>
+        <b>Password:</b> ${password}<br><br>
+        Please change your password after your first login.
+      `;
+
+      await sendEmailViaAPI({
+        to: userEmail,
+        subject: "Welcome to Our Platform",
+        message: emailMessage,
+        header: "Welcome Email",
+        actionUrl: "https://teacher-transfer-frontend.vercel.app/home",
+        actionText: "Go to Dashboard"
+      });
     }
 
     res.status(201).json({
