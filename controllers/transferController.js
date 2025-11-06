@@ -2,7 +2,12 @@ const TransferRequest = require('../models/TransferRequest');
 const Teacher = require('../models/Teacher');
 const User = require('../models/User');
 const School = require('../models/School');
-const { sendEmail } = require('../utils/email'); 
+const sendEmailViaAPI = require('../utils/sendEmailViaAPI');
+
+const Teacher = require('../models/Teacher');
+const School = require('../models/School');
+const TransferRequest = require('../models/TransferRequest');
+const sendEmailViaAPI = require('../utils/sendEmailViaAPI');
 
 exports.requestTransfer = async (req, res) => {
   const { teacherId, toSchoolId } = req.body;
@@ -11,15 +16,13 @@ exports.requestTransfer = async (req, res) => {
     const teacher = await Teacher.findByPk(teacherId);
     if (!teacher) return res.status(404).json({ message: 'Teacher not found' });
 
-
+    const fromSchool = await School.findByPk(teacher.currentSchoolId);
     const toSchool = await School.findByPk(toSchoolId);
     if (!toSchool) return res.status(404).json({ message: 'Target school not found' });
-
 
     if (teacher.currentSchoolId === toSchoolId) {
       return res.status(400).json({ message: "You cannot request a transfer to your current school." });
     }
-
 
     const existing = await TransferRequest.findOne({
       where: { teacherId, status: 'pending' }
@@ -27,25 +30,32 @@ exports.requestTransfer = async (req, res) => {
     if (existing) {
       return res.status(400).json({ message: 'You already have a pending transfer request.' });
     }
-    console.log('teacher:', teacher);
-    console.log('teacher.currentSchoolId:', teacher.currentSchoolId);
 
     const transfer = await TransferRequest.create({
-
-      
       teacherId,
       fromSchoolId: teacher.currentSchoolId,
       toSchoolId,
       status: 'pending'
     });
+
     if (teacher.email) {
-      const message = `Hello ${teacher.firstName},
+      const message = `
+        Hello <b>${teacher.firstName} ${teacher.lastName}</b>,<br><br>
+        Your transfer request from <b>${fromSchool?.name || 'your current school'}</b> to <b>${toSchool.name}</b> has been submitted and is pending approval.<br><br>
+        You will be notified once the status changes.<br><br>
+        Regards,<br>
+        School System
+      `;
 
-        Your transfer request from ${teacher.schoolId} to ${toSchool.name} has been submitted and is pending approval.
-
-        You will be notified once the status changes.`;
-              await sendEmail(teacher.email, 'Transfer Request Submitted', message, 'School System');
-            }
+      await sendEmailViaAPI({
+        to: teacher.email,
+        subject: 'Transfer Request Submitted',
+        message,
+        header: 'Transfer Request',
+        actionUrl: "https://teacher-transfer-frontend.vercel.app/transfer",
+        actionText: "View Transfer"
+      });
+    }
 
     res.status(201).json(transfer);
   } catch (err) {
@@ -63,7 +73,7 @@ exports.getTransferRequests = async (req, res) => {
     
 
     if (user.role === 'teacher') {
-      // Teachers only see their own requests
+
       if (!user.teacherProfileId) {
         console.error(`[ERROR] Teacher profile not linked. userId=${user.id}`);
         return res.status(400).json({ message: "Teacher profile not linked to this account." });
@@ -73,7 +83,6 @@ exports.getTransferRequests = async (req, res) => {
       console.log(`[INFO] Applying filter for teacher: teacherId=${user.teacherProfileId}`);
 
     } else if (user.role === 'headteacher') {
-      // Headteachers: find their schoolId from Teacher profile
       if (!user.teacherProfileId) {
         console.error(`[ERROR] Headteacher profile not linked. userId=${user.id}`);
         return res.status(400).json({ message: "Headteacher profile not linked to this account." });
@@ -88,12 +97,12 @@ exports.getTransferRequests = async (req, res) => {
         return res.status(400).json({ message: "Headteacher does not belong to any school." });
       }
 
-      // Headteacher sees all requests from their school
+  
       whereClause.fromSchoolId = teacher.currentSchoolId;
       console.log(`[INFO] Applying filter for headteacher: fromSchoolId=${teacher.currentSchoolId}`);
 
     } else {
-      // Admin sees all
+
       console.log(`[INFO] Admin user: no filters applied`);
     }
 
@@ -115,7 +124,6 @@ exports.getTransferRequests = async (req, res) => {
 
     console.log(`[INFO] Found ${requests.length} transfer requests`);
 
-    // Log available transfers
     if (requests.length > 0) {
       console.log(`[INFO] Available Transfers:`);
       requests.forEach(reqItem => {
@@ -135,10 +143,6 @@ exports.getTransferRequests = async (req, res) => {
   }
 };
 
-
-// --------------------
-// Update transfer status
-// --------------------
 exports.updateTransferStatus = async (req, res) => {
   const { requestId } = req.params;
   const { status, reason } = req.body;
@@ -157,11 +161,15 @@ exports.updateTransferStatus = async (req, res) => {
 
   try {
     const transfer = await TransferRequest.findByPk(requestId, {
-      include: [{ model: Teacher, as: 'teacher' }, { model: School, as: 'toSchool' }]
+      include: [
+        { model: Teacher, as: 'teacher' },
+        { model: School, as: 'toSchool' },
+        { model: School, as: 'fromSchool' }
+      ]
     });
+
     if (!transfer) return res.status(404).json({ message: "Transfer request not found" });
 
-    // Update teacher's school if approved
     if (status.toLowerCase() === 'approved') {
       const teacher = await Teacher.findByPk(transfer.teacherId);
       if (!teacher) return res.status(404).json({ message: "Teacher not found" });
@@ -173,16 +181,32 @@ exports.updateTransferStatus = async (req, res) => {
     transfer.statusReason = reason || "";
     await transfer.save();
 
-    // Send email notification to teacher about status change
+  
     if (transfer.teacher && transfer.teacher.email) {
       const teacher = transfer.teacher;
-      const toSchoolName = transfer.toSchool ? transfer.toSchool.name : 'target school';
-      let message = `Hello ${teacher.firstName},\n\n`;
-      message += `Your transfer request to ${toSchoolName} has been updated.`;
-      message += `\n\nStatus: ${transfer.status}`;
-      if (reason) message += `\nReason: ${reason}`;
+      const fromSchoolName = transfer.fromSchool?.name || 'your current school';
+      const toSchoolName = transfer.toSchool?.name || 'target school';
 
-      await sendEmail(teacher.email, 'Transfer Request Status Update', message, 'School System');
+      let emailMessage = `
+        Hello <b>${teacher.firstName} ${teacher.lastName}</b>,<br><br>
+        Your transfer request from <b>${fromSchoolName}</b> to <b>${toSchoolName}</b> has been updated.<br><br>
+        <b>Status:</b> ${transfer.status.charAt(0).toUpperCase() + transfer.status.slice(1)}<br>
+      `;
+
+      if (reason) {
+        emailMessage += `<b>Reason:</b> ${reason}<br>`;
+      }
+
+      emailMessage += `<br>Regards,<br>School System`;
+
+      await sendEmailViaAPI({
+        to: teacher.email,
+        subject: 'Transfer Request Status Update',
+        message: emailMessage,
+        header: 'Transfer Status Update',
+        actionUrl: "https://teacher-transfer-frontend.vercel.app/transfer",
+        actionText: "View Transfer"
+      });
     }
 
     res.status(200).json({ message: `Transfer ${status.toLowerCase()} successfully`, transfer });
@@ -192,9 +216,7 @@ exports.updateTransferStatus = async (req, res) => {
   }
 };
 
-// --------------------
-// Get transfer by ID
-// --------------------
+
 exports.getTransferById = async (req, res) => {
   const { requestId } = req.params;
 
