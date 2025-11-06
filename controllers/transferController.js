@@ -66,10 +66,8 @@ exports.getTransferRequests = async (req, res) => {
     console.log(`[INFO] User making request: id=${user.id}, role=${user.role}`);
 
     let whereClause = {};
-    
 
     if (user.role === 'teacher') {
-
       if (!user.teacherProfileId) {
         console.error(`[ERROR] Teacher profile not linked. userId=${user.id}`);
         return res.status(400).json({ message: "Teacher profile not linked to this account." });
@@ -93,12 +91,10 @@ exports.getTransferRequests = async (req, res) => {
         return res.status(400).json({ message: "Headteacher does not belong to any school." });
       }
 
-  
       whereClause.fromSchoolId = teacher.currentSchoolId;
       console.log(`[INFO] Applying filter for headteacher: fromSchoolId=${teacher.currentSchoolId}`);
 
     } else {
-
       console.log(`[INFO] Admin user: no filters applied`);
     }
 
@@ -110,10 +106,11 @@ exports.getTransferRequests = async (req, res) => {
         { 
           model: Teacher, 
           as: 'teacher',
-          include: [{ model: School, as: 'currentSchool' }]
+          required: false, // allow requests without a teacher
+          include: [{ model: School, as: 'currentSchool', required: false }]
         },
-        { model: School, as: 'fromSchool' },
-        { model: School, as: 'toSchool' }
+        { model: School, as: 'fromSchool', required: false },
+        { model: School, as: 'toSchool', required: false }
       ],
       order: [['id', 'DESC']]
     });
@@ -123,8 +120,15 @@ exports.getTransferRequests = async (req, res) => {
     if (requests.length > 0) {
       console.log(`[INFO] Available Transfers:`);
       requests.forEach(reqItem => {
+        const teacherName = reqItem.teacher 
+          ? `${reqItem.teacher.firstName || ''} ${reqItem.teacher.lastName || ''}`.trim()
+          : 'N/A';
+
+        const fromSchoolName = reqItem.fromSchool?.name || 'N/A';
+        const toSchoolName = reqItem.toSchool?.name || 'N/A';
+
         console.log(
-          `- Transfer ID: ${reqItem.id}, Teacher: ${reqItem.teacher.firstName} ${reqItem.teacher.lastName}, From: ${reqItem.fromSchool?.name || 'N/A'}, To: ${reqItem.toSchool?.name || 'N/A'}`
+          `- Transfer ID: ${reqItem.id}, Teacher: ${teacherName}, From: ${fromSchoolName}, To: ${toSchoolName}`
         );
       });
     } else {
@@ -138,6 +142,7 @@ exports.getTransferRequests = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 exports.updateTransferStatus = async (req, res) => {
   const { requestId } = req.params;
