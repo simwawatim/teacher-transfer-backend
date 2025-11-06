@@ -120,15 +120,17 @@ exports.getTransferRequests = async (req, res) => {
     if (requests.length > 0) {
       console.log(`[INFO] Available Transfers:`);
       requests.forEach(reqItem => {
-        const teacherName = reqItem.teacher 
-          ? `${reqItem.teacher.firstName || ''} ${reqItem.teacher.lastName || ''}`.trim()
+        const teacher = reqItem.teacher;
+        const teacherName = teacher 
+          ? `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim() 
           : 'N/A';
+        const teacherExperience = teacher?.experience ?? 'N/A'; // safely handle null
 
         const fromSchoolName = reqItem.fromSchool?.name || 'N/A';
         const toSchoolName = reqItem.toSchool?.name || 'N/A';
 
         console.log(
-          `- Transfer ID: ${reqItem.id}, Teacher: ${teacherName}, From: ${fromSchoolName}, To: ${toSchoolName}`
+          `- Transfer ID: ${reqItem.id}, Teacher: ${teacherName}, Experience: ${teacherExperience}, From: ${fromSchoolName}, To: ${toSchoolName}`
         );
       });
     } else {
